@@ -1,0 +1,40 @@
+#Dependencies
+markdown: redcarpet
+redcarpet:
+  extensions: ["tables"]
+
+highligher: pygments
+
+#Permalinks
+permalink: pretty
+relative_permalinks: true
+
+#Setup
+title: SavinaRoja
+tagline: 'Structural Biologist, Programmer, Tinkerer'
+description: 'Writing some hopefully useful stuff'
+url: http://savinaroja.github.io
+baseurl: /
+shorturl: savinaroja.github.io
+
+author:
+  name: Paul Barton
+  url: https://github.com/SavinaRoja
+
+paginate: 5
+
+#Custom vars
+github:
+  repo: https:github.com/SavinaRoja/savinaroja.github.io
+
+
+#This is the list of pages to include in the website's header
+pages_list:
+  About: '/about'
+  Archive: '/archive'
+  Feed: '/atom.xml'
+
+#Allow URL Redirects:
+#  * https://help.github.com/articles/redirects-on-github-pages
+gems:
+  - jekyll-redirect-from
