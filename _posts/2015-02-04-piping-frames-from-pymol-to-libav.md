@@ -70,9 +70,11 @@ with the following command:
 avconv -i frame%03d.png -r 30 low_res.mp4
 {% endhighlight %}
 
-You should see ~9MB of images become ~500KB of video. Here is my render:
+You should see ~9MB of images become ~500KB of video.
 
-{% video /assets/low_res.mp4 400 300 %}
+*I was going to use HTML5 video to nicely display the videos provided in this
+post, but I haven't worked out the details yet since GitHub Pages doesn't allow
+plugins. So for the meantime: [here is the video](/assets/dsred_low_res.mp4).*
 
 So let's assume we're happy with this preview, and willing to commit our time
 and computing to doing a full scale render. Here's an updated script for
@@ -189,7 +191,7 @@ into `avconv` for encoding and they will not accumulate on the hard disk. Since
 the video encoding is being done simultaneously with the rendering, it should
 also complete nearly simultaneously.
 
-**I'll update this post tomorrow with a link to the video output**
+*I'll update this post tomorrow with a link to the full resolution video output*
 
 ### Acknowledging some roughness
 
