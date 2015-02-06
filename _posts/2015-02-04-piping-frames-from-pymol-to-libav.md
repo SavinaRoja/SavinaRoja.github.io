@@ -27,7 +27,7 @@ applies very broadly.
 dsRed is a protein found in coral which fluoresces red in the visible spectrum
 and forms a homotetramer.
 [PDB: 1G7K](http://www.rcsb.org/pdb/explore/explore.do?structureId=1g7k). To get
-started, I've [prepared PyMOL session](assets/dsred.pse) in which preliminary
+started, I've [prepared a PyMOL session](assets/dsred.pse) in which preliminary
 work has been done and rendering settings have been configured. When loaded it
 should present you with the following view:
 
