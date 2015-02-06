@@ -134,19 +134,17 @@ cat *.png > my_pipe
 This basically just recapitulated our previous encoding workflow in a piped
 form. One thing to be aware of is that whenever the pipe is closed, `avconv`
 will receive that indication and stop reading the pipe. So if for instance we
-wanted to loop our video twice with this workflow, this:
+wanted to loop our video twice with this workflow, this would do so:
 
 {% highlight bash %}
 cat *.png *.png > my_pipe
 {% endhighlight %}
 
-would do so while this:
+while this would only yield one loop:
 
 {% highlight bash %}
 cat *.png > my_pipe; cat *.png > my_pipe
 {% endhighlight %}
-
-would only yield one loop.
 
 Here's one last iteration on the script, adapting it for use with pipes.
 Prior to the script's execution, `avconv` must be set to
