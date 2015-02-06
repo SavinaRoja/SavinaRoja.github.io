@@ -63,7 +63,7 @@ for i in range(18):
 {% endhighlight %}
 
 Running this script from our PyMOL session should generate 108 different frame
-image files. Now we decide to stitch these low resolution images into a video
+image files. Now we stitch these low resolution images into a video
 with the following command:
 
 {% highlight bash %}
@@ -76,8 +76,8 @@ You should see ~9MB of images become ~500KB of video.
 post, but I haven't worked out the details yet since GitHub Pages doesn't allow
 plugins. So for the meantime: [here is the video](/assets/dsred_low_res.mp4).*
 
-So let's assume we're happy with this preview, and willing to commit our time
-and computing to doing a full scale render. Here's an updated script for
+Once ready to commit our time and computing to doing a full scale
+render, we might use an updated script for
 generating higher resolution frames with smoother/slower rotations:
 
 {% highlight python %}
@@ -148,8 +148,8 @@ cat *.png > my_pipe; cat *.png > my_pipe
 
 would only yield one loop.
 
-With this information in mind, I will present a final iteration of the video
-generation script. Prior to the script's execution, `avconv` must be set to
+Here's one last iteration on the script, adapting it for use with pipes.
+Prior to the script's execution, `avconv` must be set to
 listen to the pipe; 
 `avconv -f image2pipe -c:v png -i my_pipe -r 30 output.mp4`.
 
