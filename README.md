@@ -1,1 +1,1 @@
-This is the personal blog site for SavinaRoja, hosted on GitHub.
+This contains the personal website for SavinaRoja, Paul Barton, which can be found at http://savinaroja.github.io/
