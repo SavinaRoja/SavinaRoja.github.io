@@ -31,7 +31,7 @@ started, I've [prepared a PyMOL session](assets/dsred.pse) in which preliminary
 work has been done and rendering settings have been configured. When loaded it
 should present you with the following view:
 
-![dsRed tetramer](assets/dsred.png)
+![dsRed tetramer](/assets/dsred.png)
 
 Here's a script to produce a pre-view video of dsRed with simple actions: tip,
 spin, un-tip. We'll build off of this simple foundation.
