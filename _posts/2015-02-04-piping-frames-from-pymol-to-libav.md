@@ -173,7 +173,7 @@ os.close(produce_frame.pipe)
 
 Executing this script will result in generated frames being passed immediately
 into `avconv` for encoding. Video encoding is also encoded simultaneously and
-will conclude immediately after the frames are done being created andthe pipe is
+will conclude immediately after the frames are done being created and the pipe is
 closed. [Here's the full size render](/assets/dsred_high_res.mp4).
 
 ### Acknowledging some roughness
