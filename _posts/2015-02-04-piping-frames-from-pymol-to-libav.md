@@ -84,17 +84,17 @@ def produce_frame():
 
 produce_frame.frame_count = 0
 
-#Rotate 90 degrees in x over 90 frames, 3 seconds
+#Rotate 90 degrees in x over 90 frames
 for i in range(90):
     cmd.turn('x', 1)
     produce_frame()
 
-#Rotate 360 degrees in y over 360 frames, 12 seconds
+#Rotate 360 degrees in y over 360 frames
 for i in range(360):
     cmd.turn('y', 1)
     produce_frame()
 
-#Rotate -90 degrees in x over 90 frames, 3 seconds
+#Rotate -90 degrees in x over 90 frames
 for i in range(90):
     cmd.turn('x', -1)
     produce_frame()
@@ -151,17 +151,17 @@ def produce_frame():
 
 produce_frame.pipe = os.open('my_pipe', os.O_WRONLY)
 
-#Rotate 90 degrees in x over 90 frames, 3 seconds
+#Rotate 90 degrees in x over 90 frames
 for i in range(90):
     cmd.turn('x', 1)
     produce_frame()
 
-#Rotate 360 degrees in y over 360 frames, 12 seconds
+#Rotate 360 degrees in y over 360 frames
 for i in range(360):
     cmd.turn('y', 1)
     produce_frame()
 
-#Rotate -90 degrees in x over 90 frames, 3 seconds
+#Rotate -90 degrees in x over 90 frames
 for i in range(90):
     cmd.turn('x', -1)
     produce_frame()
