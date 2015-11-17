@@ -7,7 +7,7 @@ This post will be about performing basic sequence transformations in Haskell
 relating to the central dogma of molecular biology. I'll begin with a short
 introduction of the central dogma which you should feel free to skip if you are
 already quite familiar with it, it is there if you're new to the subject or want
-a quick refresher. [This will jump you past it.](Employing Haskell)
+a quick refresher. [This will jump you past it.](#Employing Haskell)
 
 ## What the "central dogma" is all about
 
@@ -68,5 +68,5 @@ alternative splicing, RNA editing, RNA interference, post-translational
 modification, DNA methylation, inteins, riboswitches, horizontal gene transfer,
 direct DNA translation. 
 
-## [Employing Haskell]
+## Employing Haskell
 
