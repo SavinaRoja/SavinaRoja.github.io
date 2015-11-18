@@ -45,9 +45,10 @@ demonstrated false:
  * Protein to DNA information flow
  * Protein to RNA information flow
 
-No mechanism has been yet discovered for reverse translation, such a discovery
-would without question disprove the central dogma as a universal rule. One arena
-of debate is whether prion activity represents a violation.
+If the decoding of protein sequence to nucleic acids (reverse translation) were
+to be discovered, that would be a refutation of the central dogma. So far, no
+such discovery has been made. However there is some debate over whether
+prion activity represents a violation.
 [This paper and the conversation that follows provides a good discussion of the
 matter](https://dx.doi.org/doi:10.1186/1745-6150-7-27). I'll try to give
 a short layperson's summary.
@@ -60,7 +61,8 @@ that of prion activity affecting how the translation of many other proteins
 takes place, the ribosome does not terminate as typical, and so affects the
 sequence information of other proteins. In light of this, even keeping to a very
 strict sense of the central dogma, it could be argued that protein sequence
-information may transfer to protein sequence information: a violation.
+information may result in altering protein sequence information and violate the
+dogma.
 
 I'm not sure whether or not I am ready to offer a concrete opinion, because it
 would seem to me that the examples discussed might be little distinguished
