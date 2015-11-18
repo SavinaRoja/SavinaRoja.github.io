@@ -25,7 +25,7 @@ is conveyed from DNA, to RNA, ultimately to protein, and sequence information
 in protein is never conveyed back to DNA or RNA. Here's a little diagram of what
 the central dogma allows:
 
-![central dogma graph](/assess/Centraldogma_nodetails_293_240.png)
+![central dogma graph](/assets/Centraldogma_nodetails_293_240.png)
 
 Much has been discovered since the central dogma was originally formulated,
 giving us a richer view of genetics and biology. In light of some of these
