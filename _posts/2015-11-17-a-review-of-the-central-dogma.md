@@ -30,10 +30,10 @@ the central dogma allows:
 Much has been discovered since the central dogma was originally formulated,
 giving us a richer view of genetics and biology. In light of some of these
 discoveries, some argue that the central dogma has been falsified, leaving it
-perhaps only useful as a general statement of how *most* things work. In general
-I believe that these views greatly reflect how our thinking has shifted with
-regards to information being more than the [sequence information with which the
-central dogma was originally concerned](http://www.nature.com/nature/focus/crick/pdf/crick227.pdf).
+perhaps only useful as a general statement of how *most* things work. I believe
+that these views frequently reflect how our thinking has shifted with regards to
+information in a biological context. There's a lot more to information than
+solely the [sequence information with which the central dogma was originally concerned](http://www.nature.com/nature/focus/crick/pdf/crick227.pdf).
 
 ### Falsification of the central dogma?
 
@@ -64,12 +64,11 @@ strict sense of the central dogma, it could be argued that protein sequence
 information may result in altering protein sequence information and violate the
 dogma.
 
-I'm not sure whether or not I am ready to offer a concrete opinion, because it
-would seem to me that the examples discussed might be little distinguished
-(though certainly no less fascinating) from other epigenetic factors influence
-chromatin regulation and alternative splicing to name a couple. I might offer
-then that if epigenetics do impinge on the central dogma, then it is not only
-prions that violate the central dogma, but other epigenetic modes as well that
+I'm not sure whether or not I am fully decided here, because it
+would seem to me that there is little distinction between this subject
+(though certainly no less fascinating) and other epigenetic factors. I might
+suggest then that if epigenetics do impinge on the central dogma, then it is
+contradicted not only by prions, but other epigenetic modes as well that
 influence biopolymer sequence.
 
 Whether or not the central dogma stands does not undermine the foundations of
