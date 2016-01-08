@@ -1,6 +1,8 @@
 --A collection of the code presented in "Haskell Meets the Central Dogma"
 --By Paul Barton
 
+import Data.List.Split
+
 type Element = Char            -- A unitary object
 type Seq     = [Element]       -- An ordered collection of Elements
 
@@ -13,7 +15,9 @@ type RNASeq  = [RNABase]       -- RNA variant of Sequence
 type AminoAcid  = Char         -- Protein variant of Element
 type ProteinSeq = [AminoAcid]  -- Protein variant of Sequence
 
---Replication
+-----------------
+-- Replication --
+-----------------
 
 --function that gives whatever sequence element it receives
 replicateBase :: Element -> Element
@@ -27,7 +31,9 @@ replication s = map replicateBase s
 validReplication :: Seq -> Bool
 validReplication s = s == replication s
 
---Complementation
+---------------------
+-- Complementation --
+---------------------
 
 --complementarity for DNA, by nucleotide
 complementDNABase :: DNABase -> DNABase
@@ -71,7 +77,10 @@ reverseComplementDNA = reverse . complementDNA
 reverseComplementRNA :: RNASeq -> RNASeq
 reverseComplementRNA = reverse . complementRNA
 
---Transcription and Reverse Transcription
+--------------------------------------------
+--Transcription and Reverse Transcription --
+--------------------------------------------
+
 transcribeBase :: DNABase -> RNABase
 transcribeBase 'T' = 'U'
 transcribeBase  x  =  x  -- leave other bases, or unexpected chars, alone
@@ -93,3 +102,88 @@ pingPong s = s == (reverseTranscribe $ transcribe s)
 
 thereAndBackAgain :: RNASeq -> Bool
 thereAndBackAgain s = s == (transcribe $ reverseTranscribe s)
+
+-----------------
+-- Translation --
+-----------------
+
+--Codons are just special cases (length 3) of their basic types
+type DNACodon = DNASeq
+type RNACodon = RNASeq
+
+--Using RNA codons, if we want to use DNA, we can just transcribe first
+--There are 4^3 = 64 combinations, so 64 codons. 
+geneticCode :: RNACodon -> AminoAcid
+geneticCode "AAA" = 'K'  -- Lysine
+geneticCode "AAC" = 'N'  -- Asparagine
+geneticCode "AAG" = 'K'  -- Lysine
+geneticCode "AAU" = 'N'  -- Asparagine
+geneticCode "ACA" = 'T'  -- Threonine
+geneticCode "ACC" = 'T'  -- Threonine
+geneticCode "ACG" = 'T'  -- Threonine
+geneticCode "ACU" = 'T'  -- Threonine
+geneticCode "AGA" = 'R'  -- Arginine
+geneticCode "AGC" = 'S'  -- Serine
+geneticCode "AGG" = 'R'  -- Arginine
+geneticCode "AGU" = 'S'  -- Serine
+geneticCode "AUA" = 'I'  -- Isoleucine
+geneticCode "AUC" = 'I'  -- Isoleucine
+geneticCode "AUG" = 'M'  -- Methionine
+geneticCode "AUU" = 'I'  -- Isoleucine
+geneticCode "CAA" = 'Q'  -- Glutamine
+geneticCode "CAC" = 'H'  -- Histidine
+geneticCode "CAG" = 'Q'  -- Glutamine
+geneticCode "CAU" = 'H'  -- Histidine
+geneticCode "CCA" = 'P'  -- Proline
+geneticCode "CCC" = 'P'  -- Proline
+geneticCode "CCG" = 'P'  -- Proline
+geneticCode "CCU" = 'P'  -- Proline
+geneticCode "CGA" = 'R'  -- Arginine
+geneticCode "CGC" = 'R'  -- Arginine
+geneticCode "CGG" = 'R'  -- Arginine
+geneticCode "CGU" = 'R'  -- Arginine
+geneticCode "CUA" = 'L'  -- Leucine
+geneticCode "CUC" = 'L'  -- Leucine
+geneticCode "CUG" = 'L'  -- Leucine
+geneticCode "CUU" = 'L'  -- Leucine
+geneticCode "GAA" = 'E'  -- Glutamate
+geneticCode "GAC" = 'D'  -- Aspartate
+geneticCode "GAG" = 'E'  -- Glutamate
+geneticCode "GAU" = 'D'  -- Aspartate
+geneticCode "GCA" = 'A'  -- Alanine
+geneticCode "GCC" = 'A'  -- Alanine
+geneticCode "GCG" = 'A'  -- Alanine
+geneticCode "GCU" = 'A'  -- Alanine
+geneticCode "GGA" = 'G'  -- Glycine
+geneticCode "GGC" = 'G'  -- Glycine
+geneticCode "GGG" = 'G'  -- Glycine
+geneticCode "GGU" = 'G'  -- Glycine
+geneticCode "GUA" = 'V'  -- Valine
+geneticCode "GUC" = 'V'  -- Valine
+geneticCode "GUG" = 'V'  -- Valine
+geneticCode "GUU" = 'V'  -- Valine
+geneticCode "UAA" = '*'  -- Stop (Ochre)
+geneticCode "UAC" = 'Y'  -- Tyrosine
+geneticCode "UAG" = '*'  -- Stop (Amber)
+geneticCode "UAU" = 'Y'  -- Tyrosine
+geneticCode "UCA" = 'S'  -- Serine
+geneticCode "UCC" = 'S'  -- Serine
+geneticCode "UCG" = 'S'  -- Serine
+geneticCode "UCU" = 'S'  -- Serine
+geneticCode "UGA" = '*'  -- Stop (Opal)
+geneticCode "UGC" = 'C'  -- Cysteine
+geneticCode "UGG" = 'W'  -- Tryptophan
+geneticCode "UGU" = 'C'  -- Cysteine
+geneticCode "UUA" = 'L'  -- Leucine
+geneticCode "UUC" = 'F'  -- Phenylalanine
+geneticCode "UUG" = 'L'  -- Leucine
+geneticCode "UUU" = 'F'  -- Phenylalanine
+geneticCode   x   = '-'   -- Anything else corresponds to nothing
+
+--translation is done by mapping the geneticCode over the codons
+translate :: RNASeq -> ProteinSeq
+translate s = map geneticCode $ chunksOf 3 s
+
+--composing a function to translate DNA by first transcribing it, then translating
+translateDNA :: DNASeq -> ProteinSeq
+translateDNA = translate . transcribe

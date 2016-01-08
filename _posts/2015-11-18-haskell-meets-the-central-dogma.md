@@ -175,6 +175,144 @@ sequence like "GATUACA" should evaluate False in both functions.
 
 ## Translation -> Traducción
 
+Translation is the process of creating proteins from messenger RNA sequences,
+where the RNA is read three nucleotides at a time, constituting a codon, to
+determine which amino acid to add to a growing protein chain. The ["Genetic Code"](https://en.wikipedia.org/wiki/Genetic_code)
+is the (mostly universal) coding scheme used in biology that maps codons to
+amino acids. Without further ado, here's the genetic code in haskell:
+
+{% highlight haskell%}
+--Codons are just special cases (length 3) of their basic types
+type DNACodon = DNASeq
+type RNACodon = RNASeq
+
+--Using RNA codons, if we want to use DNA, we can just transcribe first
+--There are 4^3 = 64 combinations, so 64 codons. 
+geneticCode :: RNACodon -> AminoAcid
+geneticCode "AAA" = 'K'  -- Lysine
+geneticCode "AAC" = 'N'  -- Asparagine
+geneticCode "AAG" = 'K'  -- Lysine
+geneticCode "AAU" = 'N'  -- Asparagine
+geneticCode "ACA" = 'T'  -- Threonine
+geneticCode "ACC" = 'T'  -- Threonine
+geneticCode "ACG" = 'T'  -- Threonine
+geneticCode "ACU" = 'T'  -- Threonine
+geneticCode "AGA" = 'R'  -- Arginine
+geneticCode "AGC" = 'S'  -- Serine
+geneticCode "AGG" = 'R'  -- Arginine
+geneticCode "AGU" = 'S'  -- Serine
+geneticCode "AUA" = 'I'  -- Isoleucine
+geneticCode "AUC" = 'I'  -- Isoleucine
+geneticCode "AUG" = 'M'  -- Methionine
+geneticCode "AUU" = 'I'  -- Isoleucine
+geneticCode "CAA" = 'Q'  -- Glutamine
+geneticCode "CAC" = 'H'  -- Histidine
+geneticCode "CAG" = 'Q'  -- Glutamine
+geneticCode "CAU" = 'H'  -- Histidine
+geneticCode "CCA" = 'P'  -- Proline
+geneticCode "CCC" = 'P'  -- Proline
+geneticCode "CCG" = 'P'  -- Proline
+geneticCode "CCU" = 'P'  -- Proline
+geneticCode "CGA" = 'R'  -- Arginine
+geneticCode "CGC" = 'R'  -- Arginine
+geneticCode "CGG" = 'R'  -- Arginine
+geneticCode "CGU" = 'R'  -- Arginine
+geneticCode "CUA" = 'L'  -- Leucine
+geneticCode "CUC" = 'L'  -- Leucine
+geneticCode "CUG" = 'L'  -- Leucine
+geneticCode "CUU" = 'L'  -- Leucine
+geneticCode "GAA" = 'E'  -- Glutamate
+geneticCode "GAC" = 'D'  -- Aspartate
+geneticCode "GAG" = 'E'  -- Glutamate
+geneticCode "GAU" = 'D'  -- Aspartate
+geneticCode "GCA" = 'A'  -- Alanine
+geneticCode "GCC" = 'A'  -- Alanine
+geneticCode "GCG" = 'A'  -- Alanine
+geneticCode "GCU" = 'A'  -- Alanine
+geneticCode "GGA" = 'G'  -- Glycine
+geneticCode "GGC" = 'G'  -- Glycine
+geneticCode "GGG" = 'G'  -- Glycine
+geneticCode "GGU" = 'G'  -- Glycine
+geneticCode "GUA" = 'V'  -- Valine
+geneticCode "GUC" = 'V'  -- Valine
+geneticCode "GUG" = 'V'  -- Valine
+geneticCode "GUU" = 'V'  -- Valine
+geneticCode "UAA" = '*'  -- Stop (Ochre)
+geneticCode "UAC" = 'Y'  -- Tyrosine
+geneticCode "UAG" = '*'  -- Stop (Amber)
+geneticCode "UAU" = 'Y'  -- Tyrosine
+geneticCode "UCA" = 'S'  -- Serine
+geneticCode "UCC" = 'S'  -- Serine
+geneticCode "UCG" = 'S'  -- Serine
+geneticCode "UCU" = 'S'  -- Serine
+geneticCode "UGA" = '*'  -- Stop (Opal)
+geneticCode "UGC" = 'C'  -- Cysteine
+geneticCode "UGG" = 'W'  -- Tryptophan
+geneticCode "UGU" = 'C'  -- Cysteine
+geneticCode "UUA" = 'L'  -- Leucine
+geneticCode "UUC" = 'F'  -- Phenylalanine
+geneticCode "UUG" = 'L'  -- Leucine
+geneticCode "UUU" = 'F'  -- Phenylalanine
+geneticCode   x   = '-'   -- Anything else corresponds to nothing
+{% endhighlight %}
+
+When it comes to expressing coding schemes, there's just no way to cut corners
+so that got a little verbose. Writing that sort of code is no fun, fortunately it
+doesn't come up that often. So now that we've got our genetic code, let's put it
+to work translating some codons to a protein sequence.
+
+{% highlight haskell %}
+import Data.List.Split  -- provides chunksOf function; package: split
+
+translate :: RNASeq -> ProteinSeq
+translate s = map geneticCode $ chunksOf 3 s
+{% endhighlight %}
+
+`chunksOf 3` creates a function that takes a list, and returns a list of lists
+length 3, though the last list might be shorter if the input list is not evenly
+divisible by 3. We can feed our sequence string to this, strings are just lists
+of characters after all, and get a list of codons back. `chunksOf 3 "GAUUACA"`
+would produce `["GAU", "UAC", "A"]`. Mapping the genetic code function over that
+list of strings would give `"DY-"`.
+
+If we want to translate DNA sequences, we
+could go the hard way and write a new function, or we could go the smart way and
+compose a new one:
+
+{% highlight haskell %}
+translateDNA :: DNASeq -> ProteinSeq
+translateDNA = translate . transcribe
+{% endhighlight %}
+
+Now we can do `translateDNA "GATTACA"` to get `"DY-"`.
+
+For a change of pace, let's do something a bit less silly to test our work. We
+can go to a [gene I like ](http://www.ncbi.nlm.nih.gov/gene/3933) and snag the
+sequence of [an mRNA](http://www.ncbi.nlm.nih.gov/nuccore/NM_001252617.1) and
+[the protein it produces](http://www.ncbi.nlm.nih.gov/protein/NP_001239546.1).
+For simplicity I'll put them here in FASTA format:
+
+    >gi|357933616|ref|NM_001252617.1| Homo sapiens lipocalin 1 (LCN1), transcript variant 2, mRNA
+    ACAGCCTCTCCCAGCCCCAGCAAGCGACCTGTCAGGCGGCCGTGGACTCAGACTCCGGAGATGAAGCCCC
+    TGCTCCTGGCCGTCAGCCTTGGCCTCATTGCTGCCCTGCAGGCCCACCACCTCCTGGCCTCAGACGAGGA
+    GATTCAGGATGTGTCAGGGACGTGGTATCTGAAGGCCATGACGGTGGACAGGGAGTTCCCTGAGATGAAT
+    CTGGAATCGGTGACACCCATGACCCTCACGACCCTGGAAGGGGGCAACCTGGAAGCCAAGGTCACCATGC
+    TGATAAGTGGCCGGTGCCAGGAGGTGAAGGCCGTCCTGGAGAAAACTGACGAGCCGGGAAAATACACGGC
+    CGACGGGGGCAAGCACGTGGCATACATCATCAGGTCGCACGTGAAGGACCACTACATCTTTTACTGTGAG
+    GGCGAGCTGCACGGGAAGCCGGTCCGAGGGGTGAAGCTCGTGGGCAGAGACCCCAAGAACAACCTGGAAG
+    CCTTGGAGGACTTTGAGAAAGCCGCAGGAGCCCGCGGACTCAGCACGGAGAGCATCCTCATCCCCAGGCA
+    GAGCGAAACCTGCTCTCCAGGGAGCGATTAGGGGGACACCTTGGCTCCTCAGCAGCCCAAGGACGGCACC
+    ATCCAGCACCTCCGTCATTCACAGGGACATGGAAAAAGCTCCCCACCCCTGCAGAACGCGGCTGGCTGCA
+    CCCCTTCCTACCACCCCCCGCCTTCCCCCTGCCCTGCGCCCCCTCTCCTGGTTCTCCATAAAGAGCTTCA
+    GCAGTTCCCAGTGA
+
+    >gi|357933617|ref|NP_001239546.1| lipocalin-1 isoform 1 precursor [Homo sapiens]
+    MKPLLLAVSLGLIAALQAHHLLASDEEIQDVSGTWYLKAMTVDREFPEMNLESVTPMTLTTLEGGNLEAK
+    VTMLISGRCQEVKAVLEKTDEPGKYTADGGKHVAYIIRSHVKDHYIFYCEGELHGKPVRGVKLVGRDPKN
+    NLEALEDFEKAAGARGLSTESILIPRQSETCSPGSD
+
+
+
 ## Translation Party: Reverse Translation
 
 ## Regarding Strings, ByteStrings, and Text
