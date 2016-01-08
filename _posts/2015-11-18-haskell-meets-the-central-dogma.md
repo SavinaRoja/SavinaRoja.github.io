@@ -26,7 +26,6 @@ itself) types. In Haskell, a `string` is special case of a list, `[]`, one that
 that contains `Char`s: `[Char]`.
 
 {% highlight haskell %}
-
 type Element = Char            -- A unitary object
 type Seq     = [Element]       -- An ordered collection of Elements
 
@@ -38,7 +37,6 @@ type RNASeq  = [RNABase]       -- RNA variant of Sequence
 
 type AminoAcid  = Char         -- Protein variant of Element
 type ProteinSeq = [AminoAcid]  -- Protein variant of Sequence
-
 {% endhighlight %}
 
 So let's get down to replication, one of the basic operations of DNA and RNA
@@ -49,15 +47,13 @@ of a function that yields its own input over the elements, or nucleotides, of
 the sequence.
 
 {% highlight haskell %}
-
 --function that gives whatever sequence element it receives
 replicateBase :: Element -> Element
 replicateBase x = x
 
 --function that maps the replicateBase function over its input
 replication :: Seq -> Seq
-replication x = map replicateBase x
-
+replication s = map replicateBase s
 {% endhighlight%}
 
 So when we feed a string like  `"GATTACA"` to the `replication` function, we
@@ -66,17 +62,42 @@ a test function like the following would would tell you
 if the results are good.
 
 {% highlight haskell%}
-
 validReplication :: Seq -> Bool
-validReplication x = x == replication x
+validReplication s = s == replication s
+{% endhighlight %}
 
-{% endhiglight %}
+## Everybody likes complements
 
-So
+So let's take a look at how we can write code to get the complementary sequence
+for a DNA or RNA sequence. You recall that DNA and RNA form double stranded
+complexes with other DNA and RNA molecules (or part of their own contiguous
+sequence). This is mediated by the base complementarity between the nucleotides:
+`A` pairs with `T` (or `U` in RNA) and `C` pairs with `G`. Here's how we might
+represent some of this with code:
+
+{% highlight haskell %}
+complementDNABase :: DNABase -> DNABase
+complementDNABase 'A' = 'T'
+complementDNABase 'C' = 'G'
+complementDNABase 'G' = 'C'
+complementDNABase 'T' = 'A'
+complementDNABase _ = _     -- do not change unexpected characters
+
+complementDNA :: DNASeq -> DNASeq
+complementDNA s = map complementDNABase s
+
+complementRNABase :: RNABase -> RNABase
+complementRNABase 'A' = 'U'
+complementRNABase 'C' = 'G'
+complementRNABase 'G' = 'C'
+complementRNABase 'U' = 'A'
+complementRNABase _ = _     -- do not change unexpected characters
+
+complementRNA :: RNASeq -> RNASeq
+complementRNA s = map complementRNABase s
+{% endhighlight%}
 
 ## Regarding Strings, ByteStrings, and Text
-
-Sequence information is 
 
 Let's talk data types for a bit before moving on. In Haskell we have some choice
 in readily available frameworks to deal with sequence information, namely
