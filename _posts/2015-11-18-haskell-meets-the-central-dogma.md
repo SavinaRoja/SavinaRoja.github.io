@@ -5,46 +5,53 @@ title: Haskell Meets the Central Dogma
 
 This post will introduce some Haskell code to perform sequence operations
 relevant to the *central dogma of molecular biology*. The code here should be
-relatively simple, and I hope I present the concepts in a clear fashion that is
-helpful for novices.
+relatively simple, but some familiarity with Haskell or functional programming
+is assumed.
 
-If you don't know what *the central dogma of molecular biology* is, or if you
-would like a brief review of it, [I have written a post on it](http://savinaroja.github.io/2015/11/17/a-review-of-the-central-dogma/).
+The treatment of biology in ths post is also rather simple, if you don't know
+what *the central dogma of molecular biology* is or could do with a brief
+review, [I have written a bit on it](http://savinaroja.github.io/2015/11/17/a-review-of-the-central-dogma/).
 It is meant to give a little background for some of the molecular biology terms
 used in this post, and to give a little idea of where it fits into the broader
 scope of biology today.
 
 For the examples in this post, I will be representing sequences with Haskell
-strings. I may write more on this decision later, but it boils down to
-readability and simplicity.
+strings. I may write more on this decision later, but basically I chose to do so
+for simplicity and readability..
 
-## Replication, Replication
+## Some helpful type synonyms
 
-I said that I'd be representing sequences as strings, so I might think of
-declaring the following (solely for the benefit of helping the code document
-itself) type synonyms. In Haskell, a `string` is special case of a list, `[]`, one that
-that contains `Char`s: `[Char]`.
+One good practice in Haskell is to let your data types do some of the
+documenting work for you. By using `newtype` declarations we can define some
+type synonyms that convey some extra meaning to the reader, and don't interfere
+with the compiler. So for our benefit, let's make some type synonyms to use
+while later defining what our functions do. Keep in mind that in Haskell, a
+string is a special case of a list, `[]`, one that contains `Char` elements:
+`[Char]`. thus the sequence definitions are equivalent to strings.
 
 {% highlight haskell %}
 type Element = Char            -- A unitary object
 type Seq     = [Element]       -- An ordered collection of Elements
 
-type DNABase = Char            -- DNA variant of Element
+type DNABase = Element         -- DNA variant of Element
 type DNASeq  = [DNABase]       -- DNA variant of Sequence
 
-type RNABase = Char            -- RNA variant of Element
+type RNABase = Element         -- RNA variant of Element
 type RNASeq  = [RNABase]       -- RNA variant of Sequence
 
-type AminoAcid  = Char         -- Protein variant of Element
+type AminoAcid  = Element      -- Protein variant of Element
 type ProteinSeq = [AminoAcid]  -- Protein variant of Sequence
 {% endhighlight %}
 
+## Replication, Replication
+
 So let's get down to replication, one of the basic operations of DNA and RNA
-in which an exact copy (in its own medium) is produced. A function to model
-perfect (no errors such as skips, repeats, or alterations) replication is a
-pretty trivial one. Let's represent the replication of a sequence as the map
-of a function that yields its own input over the elements, or nucleotides, of
-the sequence.
+in which an exact copy (in its own medium) is produced. Since replication (when
+we ignore possibility of error) can be modeled by defining a function that
+simply returns its own input, it's rather trivial to implement. Here I'll choose
+to define a function that works on an element as well as a sequence-wise
+function which is the mapping of the former over all of its elements. This
+pattern will be employed throughout the examples.
 
 {% highlight haskell %}
 --function that gives whatever sequence element it receives
@@ -58,20 +65,20 @@ replication s = map replicateBase s
 
 So when we feed a string like  `"GATTACA"` to the `replication` function, we
 expect it to evaluate to `"GATTACA"`. Try it out with a few strings, you could
-a test function like the following would would tell you
-if the results are good.
+a test function like the following would would tell you if the results are good.
 
 {% highlight haskell%}
+--True if the result of the replication function is the same as the input
 validReplication :: Seq -> Bool
 validReplication s = s == replication s
 {% endhighlight %}
 
 ## Everybody likes complements
 
-So let's take a look at how we can write code to get the complementary sequence
+Now let's take a look at how we can write code to get the complementary sequence
 for a DNA or RNA sequence. You recall that DNA and RNA form double stranded
 structures according to nucleobase complementarity: `A` pairs with `T` (or `U`
-in RNA) and `C` pairs with `G`. Here's how we might represent some of this with code:
+in RNA) and `C` pairs with `G`. Here's how we might represent this with code:
 
 {% highlight haskell %}
 complementDNABase :: DNABase -> DNABase
@@ -95,10 +102,9 @@ complementRNA :: RNASeq -> RNASeq
 complementRNA s = map complementRNABase s
 {% endhighlight%}
 
-These examples leverage pattern matching on their input, we also have the option
-of writing it with guards, but I tend to prefer guards when there is a bit more
-logic to perform than just pattern matching. Here's `complementDNABase` using
-guards just to show how it might be done:
+These examples leverage pattern matching on their input. Note that we also have
+the option of writing it with guards but I don't favor guards for mere pattern
+matching. Regardless, here's `complementDNABase` using guards just to demonstrate:
 
 {% highlight haskell %}
 complementDNABase :: DNABase -> DNABase
@@ -119,8 +125,8 @@ DNA and RNA sequences are traditionally presented in a specific direction: 5' to
 It is important to remember that the complementing strand of DNA or RNA
 generally "runs" in the opposite direction. That is to say, if you take `GATTACA`
 which is reading 5' to 3', and produce it's complement `CTAATGT`, the complement
-produced is reading 3' to 5'. It is common then to refer to the "reverse"
-complement of a sequence as the complement read in the conventional 5' to 3'
+produced is reading 3' to 5'. It is common then to refer to the "reverse
+complement" of a sequence as the complement read in the conventional 5' to 3'
 fashion. Producing a reverse complement function in Haskell is simple:
 
 {% highlight haskell %}
@@ -131,16 +137,20 @@ reverseComplementRNA :: RNASeq -> RNASeq
 reverseComplementRNA = reverse . complementRNA
 {% endhighlight %}
 
-Here I've used function composition with Haskell's [`reverse`](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:reverse)
-to define the reverse complement functions.
+Here I've used function composition with Haskell's
+[`reverse`](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:reverse)
+function to easily define the reverse complement functions. That's pretty handy.
 
 ## Transcription and noitpircsnarT
 
 The process of transcription refers to the production of RNA from a DNA template
 and reverse transcription the production of DNA from an RNA template. This is
 again mediated by base complementarity, and the code for it can be readily made
-by adapting our complementing functions from above. Here we need only replace
-`'T'`s with `U`s and vice versa.
+by adapting our complementing functions from above. When a DNA sequence, `s`, is
+transcribed, a copy of that sequence is made in RNA using base complementarity
+to the complementing DNA strand, `s'`. Since RNA nucleobases differ in the use
+of Uracil instead of Thymine, the matter of transcription involves replacing
+our `'T'`s with `'U'`s and vice versa for reverse transcription.
 
 {% highlight haskell %}
 transcribeBase :: DNABase -> RNABase
@@ -158,9 +168,11 @@ reverseTranscribe :: RNASeq -> DNASeq
 reverseTranscribe s = map reverseTranscribeBase s
 {% endhighlight %}
 
-Since transcription and reverse transcription are symmetrical processes, it
-would be good to check that if we pass a string through both functions we get
-back what we started with. I'll give the testing functions fun names:
+Transcription and reverse transcription functions should be symmetrical. By
+which I mean to say that if I transcribe a DNA sequence and then reverse
+transcribe the result, I should be back at the start again. The same is true
+if I reverse transcribe an RNA sequence, then transcribe the result. We can
+make some fun functions to test whether this holds true:
 
 {% highlight haskell %}
 pingPong :: DNASeq -> Bool
@@ -175,10 +187,10 @@ sequence like "GATUACA" should evaluate False in both functions.
 
 ## Translation -> Traducción
 
-Translation is the process of creating proteins from messenger RNA sequences,
-where the RNA is read three nucleotides at a time, constituting a codon, to
+Translation is the process of creating proteins from messenger RNA sequences.
+RNA is read in chunks of three nucleotides, constituting a codon, to
 determine which amino acid to add to a growing protein chain. The ["Genetic Code"](https://en.wikipedia.org/wiki/Genetic_code)
-is the (mostly universal) coding scheme used in biology that maps codons to
+is the (*mostly* universal) coding scheme used in biology that maps codons to
 amino acids. Without further ado, here's the genetic code in haskell:
 
 {% highlight haskell %}
@@ -257,8 +269,8 @@ geneticCode   x   = '-'   -- Anything else corresponds to nothing
 {% endhighlight %}
 
 When it comes to expressing coding schemes, there's just no way to cut corners
-so that got a little verbose. Writing that sort of code is no fun, fortunately it
-doesn't come up that often. So now that we've got our genetic code, let's put it
+so that got a little verbose. Writing that sort of code is no fun, but there was
+no way around it. So now that we've got our genetic code, let's put it
 to work translating some codons to a protein sequence.
 
 {% highlight haskell %}
@@ -269,7 +281,7 @@ translate s = map geneticCode $ chunksOf 3 s
 {% endhighlight %}
 
 `chunksOf 3` creates a function that takes a list, and returns a list of lists
-of length 3, though the last one might be shorter if the input list is not evenly
+of length 3, though the last item might be shorter if the input list is not evenly
 divisible by 3. We can feed our sequence string to this, strings are just lists
 of characters after all, and get a list of codons back. `chunksOf 3 "GAUUACA"`
 would produce `["GAU", "UAC", "A"]`. Mapping the genetic code function over that
@@ -277,7 +289,7 @@ list of strings would give `"DY-"`.
 
 If we want to translate DNA sequences, we
 could go the hard way and write a new function, or we could go the smart way and
-compose a new one:
+create easily with function composition:
 
 {% highlight haskell %}
 translateDNA :: DNASeq -> ProteinSeq
@@ -286,8 +298,8 @@ translateDNA = translate . transcribe
 
 Now we can do `translateDNA "GATTACA"` to get `"DY-"`.
 
-For a change of pace, let's do something a bit less silly to test our work. We
-can go to a [gene I like ](http://www.ncbi.nlm.nih.gov/gene/3933) and snag the
+For a change of pace, let's do something a bit less frivolous to test our work. We
+look at a [gene I like](http://www.ncbi.nlm.nih.gov/gene/3933) and snag the
 sequence of [an mRNA](http://www.ncbi.nlm.nih.gov/nuccore/NM_001252617.1) and
 [the protein it produces](http://www.ncbi.nlm.nih.gov/protein/NP_001239546.1).
 Here's ![the mRNA sequence file](/assets/lipocalin1_mRNA.fa) and
@@ -341,9 +353,9 @@ False
 {% endhighlight %}
 
 It's pretty clear that our results don't match. If you're savvy to the topic of
-translation, you may have been expecting this. Keen pattern recognizers will
-notice that the expected translated protein is there, flanked at both ends by
-some other protein sequences. To avoid getting dense with details, I'll just say
+translation, you may have been expecting this. Though it turns out that upon 
+close inspection that we see the expected sequence **is** in there, but flanked at both ends by
+some other protein sequences. Without getting into details, I'll say
 that mRNA sequences contain untranslated regions (UTRs) at both the 5' and 3'
 ends of the sequence. These untranslated regions are a part of the sequence file
 that I grabbed and I did not account for them yet!
