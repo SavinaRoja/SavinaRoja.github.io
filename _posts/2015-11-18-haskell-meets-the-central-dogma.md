@@ -22,7 +22,7 @@ readability and simplicity.
 
 I said that I'd be representing sequences as strings, so I might think of
 declaring the following (solely for the benefit of helping the code document
-itself) types. In Haskell, a `string` is special case of a list, `[]`, one that
+itself) type synonyms. In Haskell, a `string` is special case of a list, `[]`, one that
 that contains `Char`s: `[Char]`.
 
 {% highlight haskell %}
@@ -41,7 +41,7 @@ type ProteinSeq = [AminoAcid]  -- Protein variant of Sequence
 
 So let's get down to replication, one of the basic operations of DNA and RNA
 in which an exact copy (in its own medium) is produced. A function to model
-perfect (no errors such as skips, repeats, or alterations) replications is a
+perfect (no errors such as skips, repeats, or alterations) replication is a
 pretty trivial one. Let's represent the replication of a sequence as the map
 of a function that yields its own input over the elements, or nucleotides, of
 the sequence.
@@ -70,10 +70,8 @@ validReplication s = s == replication s
 
 So let's take a look at how we can write code to get the complementary sequence
 for a DNA or RNA sequence. You recall that DNA and RNA form double stranded
-complexes with other DNA and RNA molecules (or part of their own contiguous
-sequence). This is mediated by the base complementarity between the nucleotides:
-`A` pairs with `T` (or `U` in RNA) and `C` pairs with `G`. Here's how we might
-represent some of this with code:
+structures according to nucleobase complementarity: `A` pairs with `T` (or `U`
+in RNA) and `C` pairs with `G`. Here's how we might represent some of this with code:
 
 {% highlight haskell %}
 complementDNABase :: DNABase -> DNABase
@@ -96,6 +94,29 @@ complementRNABase _ = _     -- do not change unexpected characters
 complementRNA :: RNASeq -> RNASeq
 complementRNA s = map complementRNABase s
 {% endhighlight%}
+
+These examples leverage pattern matching on their input, we also have the option
+of writing it with guards, but I tend to prefer guards when there is a bit more
+logic to perform than just pattern matching. Here's `complementDNABase` using
+guards just to show how it might be done:
+
+{% highlight haskell %}
+complementDNABase :: DNABase -> DNABase
+complementDNABase x
+  | x == 'A'  = 'T'
+  | x == 'C'  = 'G'
+  | x == 'G'  = 'C'
+  | x == 'T'  = 'A'
+  | otherwise = x
+{% endhighlight %}
+
+Giving `"GATTACA"`to `complementDNA` should yield `"CTAATGT"` and giving the
+corresponding `"GAUUACA"` to `complementRNA` should yield `"CUAAUCU"`. Give it a
+try.
+
+## Transcription and noitpircsnarT
+
+
 
 ## Regarding Strings, ByteStrings, and Text
 
