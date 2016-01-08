@@ -269,7 +269,7 @@ translate s = map geneticCode $ chunksOf 3 s
 {% endhighlight %}
 
 `chunksOf 3` creates a function that takes a list, and returns a list of lists
-length 3, though the last list might be shorter if the input list is not evenly
+of length 3, though the last one might be shorter if the input list is not evenly
 divisible by 3. We can feed our sequence string to this, strings are just lists
 of characters after all, and get a list of codons back. `chunksOf 3 "GAUUACA"`
 would produce `["GAU", "UAC", "A"]`. Mapping the genetic code function over that
