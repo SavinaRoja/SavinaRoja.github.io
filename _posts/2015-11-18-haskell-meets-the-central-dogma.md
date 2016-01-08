@@ -54,7 +54,7 @@ replicateBase x = x
 --function that maps the replicateBase function over its input
 replication :: Seq -> Seq
 replication s = map replicateBase s
-{% endhighlight%}
+{% endhighlight %}
 
 So when we feed a string like  `"GATTACA"` to the `replication` function, we
 expect it to evaluate to `"GATTACA"`. Try it out with a few strings, you could
@@ -158,7 +158,29 @@ reverseTranscribe :: RNASeq -> DNASeq
 reverseTranscribe s = map reverseTranscribeBase s
 {% endhighlight %}
 
+Since transcription and reverse transcription are symmetrical processes, it
+would be good to check that if we pass a string through both functions we get
+back what we started with. I'll give the testing functions fun names:
+
+{% highlight haskell %}
+pingPong :: DNASeq -> Bool
+pingPong s = s == (reverseTranscribe $ transcribe s)
+
+thereAndBackAgain :: RNASeq -> Bool
+thereAndBackAgain s = s == transcribe $ reverseTranscribe s
+{% endhighlight %}
+
+These of course only really work if the inputs are valid. Passing it a mixed
+sequence like "GATUACA" should evaluate False in both functions.
+
+## Translation -> Traducción
+
+## Translation Party: Reverse Translation
+
 ## Regarding Strings, ByteStrings, and Text
+
+*The following text is from an earlier draft, and will either be adapted at the
+end of this post, or become a short post on its own.*
 
 Let's talk data types for a bit before moving on. In Haskell we have some choice
 in readily available frameworks to deal with sequence information, namely

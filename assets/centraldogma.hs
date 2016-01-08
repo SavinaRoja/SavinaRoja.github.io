@@ -85,3 +85,11 @@ reverseTranscribeBase  x  =  x  -- leave other bases, or unexpected chars, alone
 
 reverseTranscribe :: RNASeq -> DNASeq
 reverseTranscribe s = map reverseTranscribeBase s
+
+--functions to test that transcription and reverse transcription functions are
+--properly symmetrical; keep in mind that it's only meant to work on valid input
+pingPong :: DNASeq -> Bool
+pingPong s = s == (reverseTranscribe $ transcribe s)
+
+thereAndBackAgain :: RNASeq -> Bool
+thereAndBackAgain s = s == (transcribe $ reverseTranscribe s)
