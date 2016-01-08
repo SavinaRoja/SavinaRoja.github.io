@@ -290,7 +290,9 @@ For a change of pace, let's do something a bit less silly to test our work. We
 can go to a [gene I like ](http://www.ncbi.nlm.nih.gov/gene/3933) and snag the
 sequence of [an mRNA](http://www.ncbi.nlm.nih.gov/nuccore/NM_001252617.1) and
 [the protein it produces](http://www.ncbi.nlm.nih.gov/protein/NP_001239546.1).
-For simplicity I'll put them here in FASTA format:
+Here's ![the mRNA sequence file](/assets/lipocalin1_mRNA.fa) and
+![the protein sequence file](/assets/lipocalin1_protein.fa). For simplicity I'll
+put them here:
 
     >gi|357933616|ref|NM_001252617.1| Homo sapiens lipocalin 1 (LCN1), transcript variant 2, mRNA
     ACAGCCTCTCCCAGCCCCAGCAAGCGACCTGTCAGGCGGCCGTGGACTCAGACTCCGGAGATGAAGCCCC
@@ -311,7 +313,30 @@ For simplicity I'll put them here in FASTA format:
     VTMLISGRCQEVKAVLEKTDEPGKYTADGGKHVAYIIRSHVKDHYIFYCEGELHGKPVRGVKLVGRDPKN
     NLEALEDFEKAAGARGLSTESILIPRQSETCSPGSD
 
+The idea now is to make sure that the results of our translation function when
+fed the mRNA sequence jives with the reference implementation's results. Let's
+get down to work! I don't want to have to type or copy the sequence into the
+source, so let's make a function to read the sequences out of the files.
 
+{% highlight haskell %}
+--A very simple, non-general function to get the sequence
+simpleSeqGetter :: FilePath -> IO Seq
+simpleSeqGetter fp = do
+  unmunged <- readFile fp
+  let linedropped = drop 1 $ lines unmunged
+  return $ foldr (++) "" linedropped
+{% endhighlight %}
+
+This is not a proper FASTA parsing job, but it serves for now. I've dropped the
+first line describing the sequence and gotten rid of the newline characters. So
+now I can do the following in `gchi`:
+
+{% highlight haskell %}
+ghci> mrna <- simpleSeqGetter "lipocalin_mRNA.fa"
+ghci> prot <- simpleSeqGetter "lipocalin_protein.fa"
+ghci> translateDNA mrna
+"TASPSPSKRPVRRPWTQTPEMKPLLLAVSLGLIAALQAHHLLASDEEIQDVSGTWYLKAMTVDREFPEMNLESVTPMTLTTLEGGNLEAKVTMLISGRCQEVKAVLEKTDEPGKYTADGGKHVAYIIRSHVKDHYIFYCEGELHGKPVRGVKLVGRDPKNNLEALEDFEKAAGARGLSTESILIPRQSETCSPGSD*GDTLAPQQPKDGTIQHLRHSQGHGKSSPPLQNAAGCTPSYHPPPSPCPAPPLLVLHKELQQFPV-"
+{% endhighlight %}
 
 ## Translation Party: Reverse Translation
 

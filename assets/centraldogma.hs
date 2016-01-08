@@ -187,3 +187,10 @@ translate s = map geneticCode $ chunksOf 3 s
 --composing a function to translate DNA by first transcribing it, then translating
 translateDNA :: DNASeq -> ProteinSeq
 translateDNA = translate . transcribe
+
+--A very simple, non-general function to get the sequence
+simpleSeqGetter :: FilePath -> IO Seq
+simpleSeqGetter fp = do
+  unmunged <- readFile fp
+  let linedropped = drop 1 $ lines unmunged
+  return $ foldr (++) "" linedropped
