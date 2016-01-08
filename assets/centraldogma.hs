@@ -194,3 +194,8 @@ simpleSeqGetter fp = do
   unmunged <- readFile fp
   let linedropped = drop 1 $ lines unmunged
   return $ foldr (++) "" linedropped
+
+--Function to drop everything before the first start codon and everything after the first
+--stop codon after the start codon
+translateCodingRegion :: RNASeq -> ProteinSeq
+translateCodingRegion s = takeWhile ('*'/=) $ dropWhile ('M'/=) $ translateDNA s

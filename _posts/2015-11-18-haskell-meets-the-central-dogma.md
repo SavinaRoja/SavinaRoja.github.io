@@ -181,7 +181,7 @@ determine which amino acid to add to a growing protein chain. The ["Genetic Code
 is the (mostly universal) coding scheme used in biology that maps codons to
 amino acids. Without further ado, here's the genetic code in haskell:
 
-{% highlight haskell%}
+{% highlight haskell %}
 --Codons are just special cases (length 3) of their basic types
 type DNACodon = DNASeq
 type RNACodon = RNASeq
@@ -336,9 +336,56 @@ ghci> mrna <- simpleSeqGetter "lipocalin_mRNA.fa"
 ghci> prot <- simpleSeqGetter "lipocalin_protein.fa"
 ghci> translateDNA mrna
 "TASPSPSKRPVRRPWTQTPEMKPLLLAVSLGLIAALQAHHLLASDEEIQDVSGTWYLKAMTVDREFPEMNLESVTPMTLTTLEGGNLEAKVTMLISGRCQEVKAVLEKTDEPGKYTADGGKHVAYIIRSHVKDHYIFYCEGELHGKPVRGVKLVGRDPKNNLEALEDFEKAAGARGLSTESILIPRQSETCSPGSD*GDTLAPQQPKDGTIQHLRHSQGHGKSSPPLQNAAGCTPSYHPPPSPCPAPPLLVLHKELQQFPV-"
+ghci> prot == translate mrna
+False
 {% endhighlight %}
 
+It's pretty clear that our results don't match. If you're savvy to the topic of
+translation, you may have been expecting this. Keen pattern recognizers will
+notice that the expected translated protein is there, flanked at both ends by
+some other protein sequences. To avoid getting dense with details, I'll just say
+that mRNA sequences contain untranslated regions (UTRs) at both the 5' and 3'
+ends of the sequence. These untranslated regions are a part of the sequence file
+that I grabbed and I did not account for them yet!
+
+The translation function appears to work, since the expected sequence is in
+there, but there's a little more work to do. To determine where the translated
+section begins, we must look for the first (5' most) start codon which happens
+to be `AUG` and codes for Methionine. Everything from that point on is
+translated until we reach a stop codon: one of `UAA`, `UAG`, `UGA`. The region
+from the start codon to the stop codon is referred to as the coding region.
+Let's implement these rules in code now:
+
+{% highlight haskell %}
+translateCodingRegion :: RNASeq -> ProteinSeq
+translateCodingRegion s = takeWhile ('*'/=) $ dropWhile ('M'/=) $ translateDNA s
+{% endhighlight %}
+
+And now we can try this function out and test its results in `ghci`:
+
+{% highlight haskell %}
+ghci> mrna <- simpleSeqGetter "lipocalin_mRNA.fa"
+ghci> prot <- simpleSeqGetter "lipocalin_protein.fa"
+ghci> translateCodingRegion mrna
+"MKPLLLAVSLGLIAALQAHHLLASDEEIQDVSGTWYLKAMTVDREFPEMNLESVTPMTLTTLEGGNLEAKVTMLISGRCQEVKAVLEKTDEPGKYTADGGKHVAYIIRSHVKDHYIFYCEGELHGKPVRGVKLVGRDPKNNLEALEDFEKAAGARGLSTESILIPRQSETCSPGSD"
+ghci> prot == translateCodingRegion mrna
+True
+{% endhighlight %}
+
+Tada! We can translate a given DNA or RNA sequence as well as fish out a coding
+region from a sequence. By the way, have you thought it's weird that I've been
+using `translateDNA` on an RNA sequence? Yeah, it's not just you. RNA sequences
+data is often stored as though it were DNA, with "T"s instead of "U"s, as it was
+in this file. It's a bit odd, but common enough to gloss over transcription and
+reverse transcription since they directly correlate.
+
 ## Translation Party: Reverse Translation
+
+Most amino acids have more than one codon that codes for them, but no codon
+codes for more than one amino acid. In this way, the genetic code is degenerate
+but not ambiguous. In other words, a given nucleic acid sequence passed through
+the genetic code will only produce one protein sequence, but a given protein
+sequence could be decoded to multiple nucleic acid sequences.
 
 ## Regarding Strings, ByteStrings, and Text
 
@@ -361,5 +408,4 @@ ByteStrings come in both strict (`Data.ByteString`) and lazy
 information that doesn't need to be treated as human language. For this reason I
 am apt to suggest that one becomes quickly acquainted with ByteStrings for
 working with biological sequence data.
-
 
