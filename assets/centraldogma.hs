@@ -35,7 +35,7 @@ complementDNABase 'A' = 'T'
 complementDNABase 'C' = 'G'
 complementDNABase 'G' = 'C'
 complementDNABase 'T' = 'A'
-complementDNABase _ = _     -- do not change unexpected characters
+complementDNABase x = x     -- do not change unexpected characters
 
 --and by sequence
 complementDNA :: DNASeq -> DNASeq
@@ -47,7 +47,7 @@ complementRNABase 'A' = 'U'
 complementRNABase 'C' = 'G'
 complementRNABase 'G' = 'C'
 complementRNABase 'U' = 'A'
-complementRNABase _ = _     -- do not change unexpected characters
+complementRNABase x = x     -- do not change unexpected characters
 
 --and by sequence
 complementRNA :: RNASeq -> RNASeq
@@ -63,3 +63,25 @@ complementRNA s = map complementRNABase s
 --  | x == 'T'  = 'A'
 --  | otherwise = x
 
+--Reverse Complementation
+--function composition quickly gets us the reverse complement functions
+reverseComplementDNA :: DNASeq -> DNASeq
+reverseComplementDNA = reverse . complementDNA
+
+reverseComplementRNA :: RNASeq -> RNASeq
+reverseComplementRNA = reverse . complementRNA
+
+--Transcription and Reverse Transcription
+transcribeBase :: DNABase -> RNABase
+transcribeBase 'T' = 'U'
+transcribeBase  x  =  x  -- leave other bases, or unexpected chars, alone
+
+transcribe :: DNASeq -> RNASeq
+transcribe s = map transcribeBase s
+
+reverseTranscribeBase :: RNABase -> DNABase
+reverseTranscribeBase 'U' = 'T'
+reverseTranscribeBase  x  =  x  -- leave other bases, or unexpected chars, alone
+
+reverseTranscribe :: RNASeq -> DNASeq
+reverseTranscribe s = map reverseTranscribeBase s

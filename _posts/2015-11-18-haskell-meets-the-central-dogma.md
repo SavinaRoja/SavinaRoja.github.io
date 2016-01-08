@@ -79,7 +79,7 @@ complementDNABase 'A' = 'T'
 complementDNABase 'C' = 'G'
 complementDNABase 'G' = 'C'
 complementDNABase 'T' = 'A'
-complementDNABase _ = _     -- do not change unexpected characters
+complementDNABase x = x     -- do not change unexpected characters
 
 complementDNA :: DNASeq -> DNASeq
 complementDNA s = map complementDNABase s
@@ -89,7 +89,7 @@ complementRNABase 'A' = 'U'
 complementRNABase 'C' = 'G'
 complementRNABase 'G' = 'C'
 complementRNABase 'U' = 'A'
-complementRNABase _ = _     -- do not change unexpected characters
+complementRNABase x = x     -- do not change unexpected characters
 
 complementRNA :: RNASeq -> RNASeq
 complementRNA s = map complementRNABase s
@@ -114,9 +114,49 @@ Giving `"GATTACA"`to `complementDNA` should yield `"CTAATGT"` and giving the
 corresponding `"GAUUACA"` to `complementRNA` should yield `"CUAAUCU"`. Give it a
 try.
 
+DNA and RNA sequences are traditionally presented in a specific direction: 5' to
+3' ([details here](https://en.wikipedia.org/wiki/Directionality_%28molecular_biology%29)).
+It is important to remember that the complementing strand of DNA or RNA
+generally "runs" in the opposite direction. That is to say, if you take `GATTACA`
+which is reading 5' to 3', and produce it's complement `CTAATGT`, the complement
+produced is reading 3' to 5'. It is common then to refer to the "reverse"
+complement of a sequence as the complement read in the conventional 5' to 3'
+fashion. Producing a reverse complement function in Haskell is simple:
+
+{% highlight haskell %}
+reverseComplementDNA :: DNASeq -> DNASeq
+reverseComplementDNA = reverse . complementDNA
+
+reverseComplementRNA :: RNASeq -> RNASeq
+reverseComplementRNA = reverse . complementRNA
+{% endhighlight %}
+
+Here I've used function composition with Haskell's [`reverse`](http://hackage.haskell.org/packages/archive/base/latest/doc/html/Prelude.html#v:reverse)
+to define the reverse complement functions.
+
 ## Transcription and noitpircsnarT
 
+The process of transcription refers to the production of RNA from a DNA template
+and reverse transcription the production of DNA from an RNA template. This is
+again mediated by base complementarity, and the code for it can be readily made
+by adapting our complementing functions from above. Here we need only replace
+`'T'`s with `U`s and vice versa.
 
+{% highlight haskell %}
+transcribeBase :: DNABase -> RNABase
+transcribeBase 'T' = 'U'
+transcribeBase  x  =  x  -- leave other bases, or unexpected chars, alone
+
+transcribe :: DNASeq -> RNASeq
+transcribe s = map transcribeBase s
+
+reverseTranscribeBase :: RNABase -> DNABase
+reverseTranscribeBase 'U' = 'T'
+reverseTranscribeBase  x  =  x  -- leave other bases, or unexpected chars, alone
+
+reverseTranscribe :: RNASeq -> DNASeq
+reverseTranscribe s = map reverseTranscribeBase s
+{% endhighlight %}
 
 ## Regarding Strings, ByteStrings, and Text
 
