@@ -404,12 +404,12 @@ ghci> prot == translateCodingRegion mrna
 True
 {% endhighlight %}
 
-Tada! We can translate a given DNA or RNA sequence as well as fish the first coding
+Tada! We can translate a given DNA or RNA sequence as well as fish out the first coding
 region from a sequence. By the way, have you thought it's weird that I've been
-using `translateDNA` on an RNA sequence? Yeah, it's not just you. RNA sequences
-data is often stored as though it were DNA, with "T"s instead of "U"s, as it was
-in this file. It's a bit odd, but common enough to gloss over transcription and
-reverse transcription since they directly correlate.
+using `translateDNA` on an RNA sequence? Yeah, it's not just you. Nucleic acid
+sequences are often stored in the DNA alphabet, regardless of whether it makes
+more physical/biological sense as RNA. It's a bit odd, but common enough to
+gloss over transcription and reverse transcription since they directly correlate.
 
 ## Translation Party: Reverse Translation
 
