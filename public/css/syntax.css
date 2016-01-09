@@ -5,8 +5,8 @@
 .highlight .o { color: #555 } /* Operator */
 .highlight .cm { color: #09f; font-style: italic } /* Comment.Multiline */
 .highlight .cp { color: #099 } /* Comment.Preproc */
-.highlight .c1 { color: #006600; } /* Comment.Single */
-.highlight .cs { color: #006600; } /* Comment.Special */
+.highlight .c1 { color: #006600; } /* Comment.Single */  /* I adjusted this */
+.highlight .cs { color: #006600; } /* Comment.Special */  /* I adjusted this */
 .highlight .gd { background-color: #fcc; border: 1px solid #c00 } /* Generic.Deleted */
 .highlight .ge { font-style: italic } /* Generic.Emph */
 .highlight .gr { color: #f00 } /* Generic.Error */
@@ -60,6 +60,8 @@
 .highlight .vi { color: #033 } /* Name.Variable.Instance */
 .highlight .il { color: #f60 } /* Literal.Number.Integer.Long */
 
+.highlight .n  {color: #0d0d0d } /* I created this rule */
+
 .css .o,
 .css .o + .nt,
-.css .nt + .nt { color: #0d0d0d; }
+.css .nt + .nt { color: #999; }
