@@ -69,6 +69,13 @@ complementRNA s = map complementRNABase s
 --  | x == 'T'  = 'A'
 --  | otherwise = x
 
+--Testing functions, to make sure double execution produces the input
+testComplementDNA :: DNASeq -> Bool
+testComplementDNA s = s == (complementDNA $ complementDNA s)
+
+testComplementRNA :: RNASeq -> Bool
+testComplementRNA s = s == (complementRNA $ complementRNA s)
+
 --Reverse Complementation
 --function composition quickly gets us the reverse complement functions
 reverseComplementDNA :: DNASeq -> DNASeq
@@ -199,3 +206,31 @@ simpleSeqGetter fp = do
 --stop codon after the start codon
 translateCodingRegion :: RNASeq -> ProteinSeq
 translateCodingRegion s = takeWhile ('*'/=) $ dropWhile ('M'/=) $ translateDNA s
+
+-------------------------
+-- Reverse Translation --
+-------------------------
+
+codonsFor :: AminoAcid -> [DNACodon]
+codonsFor 'A' = ["GCA","GCC","GCG","GCT"]              -- Alanine
+codonsFor 'C' = ["TGC","TGT"]                          -- Cysteine
+codonsFor 'D' = ["GAC","GAT"]                          -- Aspartate
+codonsFor 'E' = ["GAA","GAG"]                          -- Glutamate
+codonsFor 'F' = ["TTC","TTT"]                          -- Phenylalanine
+codonsFor 'G' = ["GGA","GGC","GGG","GGT"]              -- Glycine
+codonsFor 'H' = ["CAC","CAT"]                          -- Histidine
+codonsFor 'I' = ["ATA","ATC","ATT"]                    -- Isoleucine
+codonsFor 'K' = ["AAA","AAG"]                          -- Lysine
+codonsFor 'L' = ["CTA","CTC","CTG","CTT","TTA","TTG"]  -- Leucine
+codonsFor 'M' = ["ATG"]                                -- Methionine
+codonsFor 'N' = ["AAC","AAT"]                          -- Asparagine
+codonsFor 'P' = ["CCA","CCC","CCG","CCT"]              -- Proline
+codonsFor 'Q' = ["CAA","CAG"]                          -- Glutamine
+codonsFor 'R' = ["AGA","AGG","CGA","CGC","CGG","CGT"]  -- Arginine
+codonsFor 'S' = ["AGC","AGT","TCA","TCC","TCG","TCT"]  -- Serine
+codonsFor 'T' = ["ACA","ACC","ACG","ACT"]              -- Threonine
+codonsFor 'V' = ["GTA","GTC","GTG","GTT"]              -- Valine
+codonsFor 'W' = ["TGG"]                                -- Tryptophan
+codonsFor 'Y' = ["TAC","TAT"]                          -- Tyrosine
+codonsFor '*' = ["TAA","TAG","TGA"]                    -- Stop
+codonsFor  x  = [] -- If for some reason we get bad input, treat as empty

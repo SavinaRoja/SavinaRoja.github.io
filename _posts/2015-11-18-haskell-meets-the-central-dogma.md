@@ -5,10 +5,10 @@ title: Haskell Meets the Central Dogma
 
 This post will introduce some Haskell code to perform sequence operations
 relevant to the *central dogma of molecular biology*. The code here should be
-relatively simple, but some familiarity with Haskell or functional programming
+relatively simple, but some slight familiarity with Haskell or functional programming
 is assumed.
 
-The treatment of biology in ths post is also rather simple, if you don't know
+The treatment of biology in ths post is also kept simple, though if you don't know
 what *the central dogma of molecular biology* is or could do with a brief
 review, [I have written a bit on it](http://savinaroja.github.io/2015/11/17/a-review-of-the-central-dogma/).
 It is meant to give a little background for some of the molecular biology terms
@@ -17,17 +17,21 @@ scope of biology today.
 
 For the examples in this post, I will be representing sequences with Haskell
 strings. I may write more on this decision later, but basically I chose to do so
-for simplicity and readability..
+for simplicity and readability.
+
+![Here's the code from this post if you'd like to follow along](/assets/centraldogma.hs).
+In [`ghci`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/ghci.html) you can load the file via
+`:l centraldogma.hs` to use the functions here.
 
 ## Some helpful type synonyms
 
 One good practice in Haskell is to let your data types do some of the
 documenting work for you. By using `newtype` declarations we can define some
-type synonyms that convey some extra meaning to the reader, and don't interfere
+type synonyms that convey some extra meaning to the reader and don't interfere
 with the compiler. So for our benefit, let's make some type synonyms to use
-while later defining what our functions do. Keep in mind that in Haskell, a
+later when defining what our functions. Note that in Haskell a
 string is a special case of a list, `[]`, one that contains `Char` elements:
-`[Char]`. thus the sequence definitions are equivalent to strings.
+`[Char]`. The sequence definitions are all synonyms of `string`.
 
 {% highlight haskell %}
 type Element = Char            -- A unitary object
@@ -45,13 +49,13 @@ type ProteinSeq = [AminoAcid]  -- Protein variant of Sequence
 
 ## Replication, Replication
 
-So let's get down to replication, one of the basic operations of DNA and RNA
+So let's get started with replication, one of the basic operations of DNA and RNA
 in which an exact copy (in its own medium) is produced. Since replication (when
-we ignore possibility of error) can be modeled by defining a function that
+we ignore the possibility of error) can be modeled by defining a function that
 simply returns its own input, it's rather trivial to implement. Here I'll choose
-to define a function that works on an element as well as a sequence-wise
-function which is the mapping of the former over all of its elements. This
-pattern will be employed throughout the examples.
+to define a function that works element-wise, and a sequence-wise function which
+is the mapping of the element-wise one over all of its elements. This pattern will be
+employed throughout.
 
 {% highlight haskell %}
 --function that gives whatever sequence element it receives
@@ -63,9 +67,10 @@ replication :: Seq -> Seq
 replication s = map replicateBase s
 {% endhighlight %}
 
-So when we feed a string like  `"GATTACA"` to the `replication` function, we
-expect it to evaluate to `"GATTACA"`. Try it out with a few strings, you could
-a test function like the following would would tell you if the results are good.
+When we supply a sequence string to the `replication` function like
+`replication "GATTACA"`, it should give us `"GATTACA"` when it evaluates.
+You could try this out with various sequence strings, the empty string is an
+important test as well. Here's a little function to help test if the results are good.
 
 {% highlight haskell%}
 --True if the result of the replication function is the same as the input
@@ -76,9 +81,9 @@ validReplication s = s == replication s
 ## Everybody likes complements
 
 Now let's take a look at how we can write code to get the complementary sequence
-for a DNA or RNA sequence. You recall that DNA and RNA form double stranded
+for a DNA or RNA sequence. Recall that DNA and RNA form double stranded
 structures according to nucleobase complementarity: `A` pairs with `T` (or `U`
-in RNA) and `C` pairs with `G`. Here's how we might represent this with code:
+in RNA) and `C` pairs with `G`. Here's a representation of this in code:
 
 {% highlight haskell %}
 complementDNABase :: DNABase -> DNABase
@@ -117,8 +122,23 @@ complementDNABase x
 {% endhighlight %}
 
 Giving `"GATTACA"`to `complementDNA` should yield `"CTAATGT"` and giving the
-corresponding `"GAUUACA"` to `complementRNA` should yield `"CUAAUCU"`. Give it a
-try.
+corresponding `"GAUUACA"` to `complementRNA` should yield `"CUAAUCU"`.
+
+Complementation is a reciprocal process, meaning that if we produce `s'` as the
+complement of `s`, then `s` is also the complement of `s'`. This is an important
+property of the function, so let's test it by making sure that if either of the
+functions reproduce the input when executed twice in succession.
+
+{% highlight haskell %}
+testComplementDNA :: DNASeq -> Bool
+testComplementDNA s = s == (complementDNA $ complementDNA s)
+
+testComplementRNA :: RNASeq -> Bool
+testComplementRNA s = s == (complementRNA $ complementRNA s)
+{% endhighlight %}
+
+Use these functions on any sequence string to see if the function was correctly
+written.
 
 DNA and RNA sequences are traditionally presented in a specific direction: 5' to
 3' ([details here](https://en.wikipedia.org/wiki/Directionality_%28molecular_biology%29)).
@@ -127,7 +147,7 @@ generally "runs" in the opposite direction. That is to say, if you take `GATTACA
 which is reading 5' to 3', and produce it's complement `CTAATGT`, the complement
 produced is reading 3' to 5'. It is common then to refer to the "reverse
 complement" of a sequence as the complement read in the conventional 5' to 3'
-fashion. Producing a reverse complement function in Haskell is simple:
+fashion. Producing such a reverse complement function in Haskell is simple:
 
 {% highlight haskell %}
 reverseComplementDNA :: DNASeq -> DNASeq
@@ -169,9 +189,9 @@ reverseTranscribe s = map reverseTranscribeBase s
 {% endhighlight %}
 
 Transcription and reverse transcription functions should be symmetrical. By
-which I mean to say that if I transcribe a DNA sequence and then reverse
-transcribe the result, I should be back at the start again. The same is true
-if I reverse transcribe an RNA sequence, then transcribe the result. We can
+which I mean to say that if one transcribes a DNA sequence and then reverse
+transcribes the result, it should reproduce the input. The same is true for
+reverse transcription ofan RNA sequence then transcription of the result. We can
 make some fun functions to test whether this holds true:
 
 {% highlight haskell %}
@@ -182,13 +202,13 @@ thereAndBackAgain :: RNASeq -> Bool
 thereAndBackAgain s = s == transcribe $ reverseTranscribe s
 {% endhighlight %}
 
-These of course only really work if the inputs are valid. Passing it a mixed
+These only really work if the inputs are valid. Passing it a mixed
 sequence like "GATUACA" should evaluate False in both functions.
 
 ## Translation -> Traducción
 
 Translation is the process of creating proteins from messenger RNA sequences.
-RNA is read in chunks of three nucleotides, constituting a codon, to
+RNA is read in chunks of three nucleotides, which constitute a codon, to
 determine which amino acid to add to a growing protein chain. The ["Genetic Code"](https://en.wikipedia.org/wiki/Genetic_code)
 is the (*mostly* universal) coding scheme used in biology that maps codons to
 amino acids. Without further ado, here's the genetic code in haskell:
@@ -270,7 +290,7 @@ geneticCode   x   = '-'   -- Anything else corresponds to nothing
 
 When it comes to expressing coding schemes, there's just no way to cut corners
 so that got a little verbose. Writing that sort of code is no fun, but there was
-no way around it. So now that we've got our genetic code, let's put it
+no way around it[^1](#IUPAC_compression). So now that we've got our genetic code, let's put it
 to work translating some codons to a protein sequence.
 
 {% highlight haskell %}
@@ -384,7 +404,7 @@ ghci> prot == translateCodingRegion mrna
 True
 {% endhighlight %}
 
-Tada! We can translate a given DNA or RNA sequence as well as fish out a coding
+Tada! We can translate a given DNA or RNA sequence as well as fish the first coding
 region from a sequence. By the way, have you thought it's weird that I've been
 using `translateDNA` on an RNA sequence? Yeah, it's not just you. RNA sequences
 data is often stored as though it were DNA, with "T"s instead of "U"s, as it was
@@ -393,11 +413,53 @@ reverse transcription since they directly correlate.
 
 ## Translation Party: Reverse Translation
 
+In my previous post, I made something of a big deal about how reverse
+translation (also sometimes called "back translation")
+has never been observed and we've got pretty good reasons to never
+expect it to occur. But it turns out that there are plenty of times where we
+might want to address reverse translation computationally.
+
 Most amino acids have more than one codon that codes for them, but no codon
 codes for more than one amino acid. In this way, the genetic code is degenerate
 but not ambiguous. In other words, a given nucleic acid sequence passed through
 the genetic code will only produce one protein sequence, but a given protein
 sequence could be decoded to multiple nucleic acid sequences.
+
+This leads to a **very hard** problem in trying to represent all the possible
+encoding sequences. Only for rather short protein sequences is it computationally
+feasible to consider representing all the combinations in memory or storage, or
+to iteratively consider all of the possibilities.
+
+I think that looking deeper into reverse translation applications is worthy of
+one or more focused posts, but it'd be good to give a short treatment here. I'll
+define a function that decodes a protein sequence to its possible DNA sequences.
+Might get a little lengthy again...
+
+{% highlight haskell %}
+codonsFor :: AminoAcid -> [DNACodon]
+codonsFor 'A' = ["GCA","GCC","GCG","GCT"]              -- Alanine
+codonsFor 'C' = ["TGC","TGT"]                          -- Cysteine
+codonsFor 'D' = ["GAC","GAT"]                          -- Aspartate
+codonsFor 'E' = ["GAA","GAG"]                          -- Glutamate
+codonsFor 'F' = ["TTC","TTT"]                          -- Phenylalanine
+codonsFor 'G' = ["GGA","GGC","GGG","GGT"]              -- Glycine
+codonsFor 'H' = ["CAC","CAT"]                          -- Histidine
+codonsFor 'I' = ["ATA","ATC","ATT"]                    -- Isoleucine
+codonsFor 'K' = ["AAA","AAG"]                          -- Lysine
+codonsFor 'L' = ["CTA","CTC","CTG","CTT","TTA","TTG"]  -- Leucine
+codonsFor 'M' = ["ATG"]                                -- Methionine
+codonsFor 'N' = ["AAC","AAT"]                          -- Asparagine
+codonsFor 'P' = ["CCA","CCC","CCG","CCT"]              -- Proline
+codonsFor 'Q' = ["CAA","CAG"]                          -- Glutamine
+codonsFor 'R' = ["AGA","AGG","CGA","CGC","CGG","CGT"]  -- Arginine
+codonsFor 'S' = ["AGC","AGT","TCA","TCC","TCG","TCT"]  -- Serine
+codonsFor 'T' = ["ACA","ACC","ACG","ACT"]              -- Threonine
+codonsFor 'V' = ["GTA","GTC","GTG","GTT"]              -- Valine
+codonsFor 'W' = ["TGG"]                                -- Tryptophan
+codonsFor 'Y' = ["TAC","TAT"]                          -- Tyrosine
+codonsFor '*' = ["TAA","TAG","TGA"]                    -- Stop
+codonsFor  x  = [] -- If for some reason we get bad input, treat as empty
+{% endhighlight %}
 
 ## Regarding Strings, ByteStrings, and Text
 
@@ -421,3 +483,9 @@ information that doesn't need to be treated as human language. For this reason I
 am apt to suggest that one becomes quickly acquainted with ByteStrings for
 working with biological sequence data.
 
+### Footnotes
+
+<a name="IUPAC_compression"></a>**1**: I could employ the IUPAC compression
+format to make this shorter, but that would just pass the buck and I'd have to
+write the details in an IUPAC function. It *would* be reusable though, and might
+be worth doing for that.
