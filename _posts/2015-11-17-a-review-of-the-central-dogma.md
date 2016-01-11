@@ -5,7 +5,7 @@ title: A Review of the Central Dogma
 
 This post is here to provide a basic overview of the central dogma of molecular
 biology as a introduction for a later post on Haskell functions pertinent to the
-mechanisms in the central dogma. [To get to that post, click here](http://savinaroja.github.io/2015/11/188888888l-meets-the-central-dogma/).
+mechanisms in the central dogma. [To get to that post, click here](http://savinaroja.github.io/2016/1/17/haskell-meets-the-central-dogma/).
 
 If you're interested in a general review of the central dogma, its mechanisms
 and current place in modern biology, continue reading. Feel free to skip it if

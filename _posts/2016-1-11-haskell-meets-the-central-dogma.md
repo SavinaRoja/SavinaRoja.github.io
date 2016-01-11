@@ -15,7 +15,7 @@ It is meant to give a little background for some of the molecular biology terms
 used in this post, and to give a little idea of where it fits into the broader
 scope of biology today.
 
-![Here's the code from this post if you'd like to follow along](/assets/centraldogma.hs).
+[Here's the code from this post if you'd like to follow along](/assets/centraldogma.hs).
 In [`ghci`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/ghci.html)
 you can load the file via `:l centraldogma.hs` to use the functions defined here..
 
