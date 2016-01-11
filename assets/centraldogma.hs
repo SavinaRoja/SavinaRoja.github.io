@@ -1,6 +1,7 @@
 --A collection of the code presented in "Haskell Meets the Central Dogma"
 --By Paul Barton
 
+import Data.List
 import Data.List.Split
 
 type Element = Char            -- A unitary object
@@ -211,6 +212,7 @@ translateCodingRegion s = takeWhile ('*'/=) $ dropWhile ('M'/=) $ translateDNA s
 -- Reverse Translation --
 -------------------------
 
+--20 standard amino acids, Stop codons, and catch-all line
 codonsFor :: AminoAcid -> [DNACodon]
 codonsFor 'A' = ["GCA","GCC","GCG","GCT"]              -- Alanine
 codonsFor 'C' = ["TGC","TGT"]                          -- Cysteine
@@ -234,3 +236,11 @@ codonsFor 'W' = ["TGG"]                                -- Tryptophan
 codonsFor 'Y' = ["TAC","TAT"]                          -- Tyrosine
 codonsFor '*' = ["TAA","TAG","TGA"]                    -- Stop
 codonsFor  x  = [] -- If for some reason we get bad input, treat as empty
+
+--mapping codonsFor over a protein sequence
+reverseTranslate :: ProteinSeq -> [[DNACodon]]
+reverseTranslate s = map codonsFor s
+
+--count up all the ways the protein sequence could be coded for in DNA or RNA
+uniqueCodings :: ProteinSeq -> Integer
+uniqueCodings s = foldr (\x ->  (*) $ genericLength x) 1 $ reverseTranslate s
