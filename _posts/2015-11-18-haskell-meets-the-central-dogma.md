@@ -15,23 +15,20 @@ It is meant to give a little background for some of the molecular biology terms
 used in this post, and to give a little idea of where it fits into the broader
 scope of biology today.
 
-For the examples in this post, I will be representing sequences with Haskell
-strings. I may write more on this decision later, but basically I chose to do so
-for simplicity and readability.
-
 ![Here's the code from this post if you'd like to follow along](/assets/centraldogma.hs).
-In [`ghci`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/ghci.html) you can load the file via
-`:l centraldogma.hs` to use the functions here.
+In [`ghci`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/ghci.html)
+you can load the file via `:l centraldogma.hs` to use the functions defined here..
 
-## Some helpful type synonyms
+### Some helpful type synonyms
 
-One good practice in Haskell is to let your data types do some of the
-documenting work for you. By using `newtype` declarations we can define some
-type synonyms that convey some extra meaning to the reader and don't interfere
-with the compiler. So for our benefit, let's make some type synonyms to use
-later when defining what our functions. Note that in Haskell a
-string is a special case of a list, `[]`, one that contains `Char` elements:
-`[Char]`. The sequence definitions are all synonyms of `string`.
+I'll be working with sequences here using Haskell's native `string` type. Though
+DNA, RNA, and protein sequences will all share this same underlying type it will
+be helpful, in terms of documenting the code, to be able to convey whether a
+function is meant to work with a particular kind of sequence or another. To do
+this let's make use of the `newtype` declaration which creates type synonyms. Using
+these will convey extra meaning to the reader and help clarify the code's intent.
+Note that in Haskell a string is a special case of a list, `[]`, one that contains `Char` elements:
+`[Char]`. These will be more informative than just `Char` and `string` later on:
 
 {% highlight haskell %}
 type Element = Char            -- A unitary object
@@ -372,20 +369,20 @@ ghci> prot == translate mrna
 False
 {% endhighlight %}
 
-It's pretty clear that our results don't match. If you're savvy to the topic of
-translation, you may have been expecting this. Though it turns out that upon 
-close inspection that we see the expected sequence **is** in there, but flanked at both ends by
-some other protein sequences. Without getting into details, I'll say
+It's pretty clear that our results don't match. Some readers might have seen
+this coming, because I've not prepared to handle an important detail! If you
+look carefully you'll see that my expected sequence **is** there, but sandwiched
+between some other protein sequence. Without getting into specifics, let's say
 that mRNA sequences contain untranslated regions (UTRs) at both the 5' and 3'
 ends of the sequence. These untranslated regions are a part of the sequence file
-that I grabbed and I did not account for them yet!
+and to figure out what the ribosome would actually produce from this particular
+mRNA we'll need to know how to extract the coding region.
 
-The translation function appears to work, since the expected sequence is in
-there, but there's a little more work to do. To determine where the translated
-section begins, we must look for the first (5' most) start codon which happens
-to be `AUG` and codes for Methionine. Everything from that point on is
+To determine where the translated section begins, we must look for the first (5'
+most) `AUG` codon, this is the start codon and codes for Methionine.
+Everything from that point on is
 translated until we reach a stop codon: one of `UAA`, `UAG`, `UGA`. The region
-from the start codon to the stop codon is referred to as the coding region.
+from the start codon to the stop codon is the coding region.
 Let's implement these rules in code now:
 
 {% highlight haskell %}
@@ -393,7 +390,8 @@ translateCodingRegion :: RNASeq -> ProteinSeq
 translateCodingRegion s = takeWhile ('*'/=) $ dropWhile ('M'/=) $ translateDNA s
 {% endhighlight %}
 
-And now we can try this function out and test its results in `ghci`:
+This now drops everything before the start codon, and keeps everything until the
+stop codon. Now we can try this function out and test its results in `ghci`:
 
 {% highlight haskell %}
 ghci> mrna <- simpleSeqGetter "lipocalin_mRNA.fa"
@@ -461,27 +459,49 @@ codonsFor '*' = ["TAA","TAG","TGA"]                    -- Stop
 codonsFor  x  = [] -- If for some reason we get bad input, treat as empty
 {% endhighlight %}
 
-## Regarding Strings, ByteStrings, and Text
+With this element-wise function in hand, we can create a reverse translation
+function to work on a protein sequence:
 
-*The following text is from an earlier draft, and will either be adapted at the
-end of this post, or become a short post on its own.*
+{% highlight haskell %}
+reverseTranslate :: ProteinSeq -> [[DNACodon]]
+reverseTranslate s = map codonsFor s
+{% endhighlight%}
 
-Let's talk data types for a bit before moving on. In Haskell we have some choice
-in readily available frameworks to deal with sequence information, namely
-Strings, ByteStrings, and Text. The choice we make depends upon the data with
-which we are working, and what we'd like to accomplish. I'll give a short
-summary of the concerns, a good starting point for more information is
-[Edward Z. Yang's post on *Strings in Haskell*](http://blog.ezyang.com/2010/08/strings-in-haskell/).
-[This post on Stack OverFlow is also very helpful](http://stackoverflow.com/questions/7357775/text-or-bytestring).
+For each amino acid in the protein sequence this function will produce a list
+of the codons that can code for it, resulting in a list of codon options. If we
+wanted to ask how many different ways the protein sequence could be encoded, we
+could do the following:
 
-Strings are a sort of native, legacy type in Haskell, and when used in the
-right contexts provide generally cleaner, more concise code. This is a boon when
-trying to provide simple examples without the noise of imports and namespaces.
-ByteStrings come in both strict (`Data.ByteString`) and lazy
-(`Data.ByteString.Lazy`) forms, and can offer high performance when working with
-information that doesn't need to be treated as human language. For this reason I
-am apt to suggest that one becomes quickly acquainted with ByteStrings for
-working with biological sequence data.
+{% highlight haskell %}
+import Data.List
+
+uniqueCodings :: ProteinSeq -> Integer
+uniqueCodings s = foldr (\x -> (*) genericLength x) 1 $ reverseTranslate s
+{% endhighlight %}
+
+This folds our list up by taking the length of each sub-list and multiplying it
+by the accumulated value which I initiated at `1`. Note that I used `genericLength`
+from `Data.List` so that it would return the length as type `Integer` which can
+hold an arbitrarily large number (these numbers get **big**). Let's give it a couple tries:
+
+{% highlight haskell%}
+ghci> uniqueCodings ""
+0
+ghci> uniqueCodings "V"
+4
+ghci> uniqueCodings "VR"
+24
+ghci> prot <- simpleSeqGetter "lipocalin1_protein.fa"
+ghci> uniqueCodings prot
+179208254265065853973421853282336100254440836495296107948284025895512055446786937609781248
+ghci> uniqueCodings "ABCDE"
+0
+{% endhighlight%}
+
+Damn, that's a lot of ways that this short sequence (only 176 amino acids) could be
+represented in DNA. Also interesting is that giving `uniqueCodings` a sequence
+with an invalid amino acid (`'B'`), it correctly reported that this could not be
+coded for by returning `0`.
 
 ### Footnotes
 
