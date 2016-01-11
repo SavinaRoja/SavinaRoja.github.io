@@ -8,12 +8,11 @@ relevant to the *central dogma of molecular biology*. The code here should be
 relatively simple, but some slight familiarity with Haskell or functional programming
 is assumed.
 
-The treatment of biology in ths post is also kept simple, though if you don't know
+The treatment of biology in this post is also kept simple, though if you don't know
 what *the central dogma of molecular biology* is or could do with a brief
-review, [I have written a bit on it](http://savinaroja.github.io/2015/11/17/a-review-of-the-central-dogma/).
-It is meant to give a little background for some of the molecular biology terms
-used in this post, and to give a little idea of where it fits into the broader
-scope of biology today.
+review, [I have written a bit on it](http://savinaroja.github.io/2015/11/17/a-review-of-the-central-dogma/);
+*it is meant to give a little background for some of the molecular biology terms
+used in this post, and to describe its context in the scope of biology today*.
 
 [Here's the code from this post if you'd like to follow along](/assets/centraldogma.hs).
 In [`ghci`](https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/ghci.html)
