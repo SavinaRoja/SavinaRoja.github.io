@@ -11,8 +11,8 @@ relative_permalinks: true
 
 #Setup
 title: SavinaRoja
-tagline: 'Structural Biologist, Programmer, Tinkerer'
-description: 'Useful stuff'
+tagline: 'Biologist, Programmer, Tinkerer'
+description: 'Useful Stuff, Probably'
 url: http://savinaroja.github.io
 baseurl: /
 shorturl: savinaroja.github.io
