@@ -476,8 +476,8 @@ could do the following:
 {% highlight haskell %}
 import Data.List
 
-uniqueCodings :: ProteinSeq -> Integer
-uniqueCodings s = foldr (\x -> (*) genericLength x) 1 $ reverseTranslate s
+uniqueCodingsCount :: ProteinSeq -> Integer
+uniqueCodingsCount s = foldr (\x -> (*) genericLength x) 1 $ reverseTranslate s
 {% endhighlight %}
 
 This folds our list up by taking the length of each sub-list and multiplying it
@@ -486,26 +486,153 @@ from `Data.List` so that it would return the length as type `Integer` which can
 hold an arbitrarily large number (these numbers get **big**). Let's give it a couple tries:
 
 {% highlight haskell%}
-ghci> uniqueCodings ""
-0
-ghci> uniqueCodings "V"
+ghci> uniqueCodingsCount ""
+1
+ghci> uniqueCodingsCount "V"
 4
-ghci> uniqueCodings "VR"
+ghci> uniqueCodingsCount "VR"
 24
 ghci> prot <- simpleSeqGetter "lipocalin1_protein.fa"
-ghci> uniqueCodings prot
+ghci> uniqueCodingsCount prot
 179208254265065853973421853282336100254440836495296107948284025895512055446786937609781248
-ghci> uniqueCodings "ABCDE"
+ghci> uniqueCodingsCount "ABCDE"
 0
 {% endhighlight%}
 
 Damn, that's a lot of ways that this short sequence (only 176 amino acids) could be
-represented in DNA. Also interesting is that giving `uniqueCodings` a sequence
+represented in DNA. Also interesting is that giving `uniqueCodingsCount` a sequence
 with an invalid amino acid such as `'B'` correctly reports that there are `0`
 ways to encode this protein.
 
-Coming up! I think I'll end this post with a short demo of actually producing
-the sequences. Laziness will be our ally.
+Now let's set to work creating a function that will actually generate the
+unique DNA sequence combinations that can code for a protein sequence. The
+signature for this function should look like this:
+
+{% highlight haskell %}
+uniqueCodings :: ProteinSeq -> [DNASeq]
+{% endhighlight %}
+
+It's clear that this function will make use of `reverseTranslate` whose result
+type is `[[DNACodon]]`, so we can begin to think how we might convert that to
+`[DNASeq]`. To do this we can make use of a fold function (like I have already
+above) with a function and an accumulator to reduce the list. So what kind of
+function might we be interested in? Consider the behavior of list comprehensions:
+
+{% highlight haskell %}
+ghci> [ x + y | x <- [10,20,30], y <- [1,2,3]]
+[11,12,13,21,22,23,31,32,33]
+ghci> [ x y | x <- [(*1), (*2), (*3)], y <- [10, 15]]
+[10,15,20,30,40,60]
+ghci> [ (,) x y | x <- ["x1", "x2"], y <- ["y1", "y2", "y3", "y4"]]
+[("x1","y1"),("x1","y2"),("x1","y3"),("x2","y1"),("x2","y2"),("x2","y3")]
+{% endhighlight %}
+
+When we draw from two lists in the creation of a new list, the list is produced
+as an operation with all the combinations of the elements in the drawn lists.
+To help illustrate how we can make use of this, here's one more example:
+
+{% highlight haskell%}
+ghci> [ x ++ y | x <- ["orange", "apple"], y <- [" juice", " concentrate"]]
+["orange juice","orange concentrate","apple juice","apple concentrate"]
+{% endhighlight %}
+
+Putting the pieces together:
+
+{% highlight haskell%}
+uniqueCodings :: ProteinSeq -> [DNASeq]
+uniqueCodings s = foldl combine [""] $ reverseTranslate s where
+                    combine xs ys = [ x ++ y | x <- xs, y <- ys]
+{% endhighlight %}
+
+Remember that massive number we got from `uniqueCodingsCount` on the lipocalin
+protein sequence? We really don't want to go printing that many of anything...
+let's keep the tests small and reasonable.
+
+{% highlight haskell%}
+ghci> uniqueCodings ""
+[""]
+ghci> uniqueCodings "H"
+["CAC","CAT"]
+ghci> uniqueCodings "HAM"
+["CACGCAATG","CACGCCATG","CACGCGATG","CACGCTATG","CATGCAATG","CATGCCATG","CATGCGATG","CATGCTATG"]
+ghci> uniqueCodings "HAMBO"
+[]
+{% endhighlight %}
+
+Pretty cool, the empty protein sequence can only be encoded as an empty DNA
+sequence. For a lone histidine `"H"` we essentially get `codonsFor 'H'` and for
+`"HAM"` we get a list of 9 unique combinations of codons. When I gave it
+bad amino acids it tells me there is no way to encode such a sequence. We should
+expect `length uniqueCodings s` should be equal to `uniqueCodingsCount s`:
+
+{% highlight haskell %}
+ghci> let testCounts s = (uniqueCodingsCount s) == (length $ uniqueCodings s)
+ghci> testCounts ""
+True
+ghci> testCounts "MARCELINE"
+True
+ghci> testCounts "BMO" -- Not valid protein sequence
+True
+{% endhighlight %}
+
+It looks like our function checks out, we now have a way to work with the DNA
+sequences that can code for a specified protein. To wrap this post up, I'll put
+that function to work solving a real world problem (I've done this in my own
+research).
+
+### Storytime
+
+*Imagine you are a scientist who has a protein you would like to produce
+and study. You know the amino acid sequence for the protein and you are
+ordering the synthesis of a DNA sequence to code for your protein. For reasons
+you try valiantly (but unsuccessfully) to explain to your great uncle Max during Thanksgiving
+dinner, you wish to incorporate a specific DNA sequence in a particular segment
+of your protein's coding region. This is to allow a restriction enzyme to cut
+your DNA sequence for important and inscrutable purposes.*
+
+*Now your DNA sequence design has a constraint. If you can help it, you'd
+prefer not to mutate the protein sequence. Perhaps you can take advantage of
+the degeneracy of the genetic code to choose codons that provide your restriction
+enzyme site without modifying any amino acids.*
+
+*You select a small region of your protein that is suitable for the site: "ALGYL"*
+
+*You ask, "Can I put an `EcoRI` or `EcoRV` site in here?"*
+
+### The solution
+
+You're smart; you decide to let a computer do the investigation.
+
+{% highlight haskell %}
+--produce only the possible coding DNA sequences that contain the constraint
+constrainedUniqueEncodings :: ProteinSeq -> [DNASeq]
+constrainedUniqueEncodings s constraint = filter (isInfixOf constraint) $ uniqueEncodings s
+{% endhighlight %}
+
+{% highlight haskell%}
+ghci> let ecoRISeq = "GAATTC"
+ghci> let ecoRVSeq = "GATATC"
+ghci> let proteinSegment = "ALGYL"
+ghci> constrainedUniqueEncodings proteinSeqment ecoRISeq
+[]
+ghci> constrainedUniqueEncodings proteinSeqment ecoRVSeq
+["GCACTAGGATATCTA","GCACTAGGATATCTC", ... ,"GCTTTGGGATATCTG","GCTTTGGGATATCTT"]
+{% endhighlight%}
+
+Sadly you can't put in an EcoRI site without changing amino acids, but you *can*
+choose your codons to incorporate the EcoRV site. I greatly abbreviated the
+output of that final evaluation, it actually gives 96 result sequences! If the
+sequence search space were much larger, it could be hard to even find the codons
+of note. A good way to improve the code would be to have the code identify them.
+In this case the EcoRV site spans three codons for "GYL". If we narrow the
+search to exactly those three we get an exact notion of our options:
+
+{% highlight haskell%}
+ghci> constrainedUniqueEncodings "GYL" ecoRVSeq
+["GGATATCTA","GGATATCTC","GGATATCTG","GGATATCTT"]
+{% endhighlight %}
+
+With that bit of practical problem solving, we conclude our demonstration.
 
 ### Footnotes
 

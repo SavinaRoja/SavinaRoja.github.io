@@ -239,8 +239,16 @@ codonsFor  x  = [] -- If for some reason we get bad input, treat as empty
 
 --mapping codonsFor over a protein sequence
 reverseTranslate :: ProteinSeq -> [[DNACodon]]
-reverseTranslate s = map codonsFor s
+reverseTranslate s  = map codonsFor s
 
 --count up all the ways the protein sequence could be coded for in DNA or RNA
-uniqueCodings :: ProteinSeq -> Integer
-uniqueCodings s = foldr (\x ->  (*) $ genericLength x) 1 $ reverseTranslate s
+uniqueCodingsCount :: ProteinSeq -> Integer
+uniqueCodingsCount s = foldr (\x ->  (*) $ genericLength x) 1 $ reverseTranslate s
+
+--produce all the ways the protein sequence could be coded for
+uniqueCodings s = foldl combine [""] $ reverseTranslate s where
+                     combine xs ys = [ x ++ y | x <- xs, y <- ys]
+
+--produce only the possible coding DNA sequences that contain the constraint
+constrainedUniqueEncodings :: ProteinSeq -> [DNASeq]
+constrainedUniqueEncodings s constraint = filter (isInfixOf constraint) $ uniqueEncodings s
