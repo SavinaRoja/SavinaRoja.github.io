@@ -625,7 +625,7 @@ output of that final evaluation, it actually gives 96 result sequences! If the
 sequence search space were much larger, it could be hard to even find the codons
 of note. A good way to improve the code would be to have the code identify them.
 In this case the EcoRV site spans three codons for "GYL". If we narrow the
-search to exactly those three we get an exact notion of our options:
+search to just those three we get an exact notion of our options:
 
 {% highlight haskell%}
 ghci> constrainedUniqueEncodings "GYL" ecoRVSeq
