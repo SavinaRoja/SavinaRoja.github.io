@@ -562,7 +562,7 @@ ghci> uniqueCodings "HAMBO"
 Pretty cool, the empty protein sequence can only be encoded as an empty DNA
 sequence. For a lone histidine `"H"` we essentially get `codonsFor 'H'` and for
 `"HAM"` we get a list of 9 unique combinations of codons. When I gave it
-bad amino acids it tells me there is no way to encode such a sequence. We should
+bad amino acids it tells me there is no way to encode such a sequence. We 
 expect `length uniqueCodings s` should be equal to `uniqueCodingsCount s`:
 
 {% highlight haskell %}
