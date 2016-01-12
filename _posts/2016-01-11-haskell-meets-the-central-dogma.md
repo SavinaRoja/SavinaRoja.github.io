@@ -24,8 +24,8 @@ I'll be working with sequences here using Haskell's native `string` type. Though
 DNA, RNA, and protein sequences will all share this same underlying type it will
 be helpful, in terms of documenting the code, to be able to convey whether a
 function is meant to work with a particular kind of sequence or another. To do
-this let's make use of the `newtype` declaration which creates type synonyms. Using
-these will convey extra meaning to the reader and help clarify the code's intent.
+this let's make use of the `type` declaration which creates type synonyms. 
+These should help clarify the code's intent.
 Note that in Haskell a string is a special case of a list, `[]`, one that contains `Char` elements:
 `[Char]`. These will be more informative than just `Char` and `string` later on:
 
