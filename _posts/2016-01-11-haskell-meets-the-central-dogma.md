@@ -87,7 +87,7 @@ complementDNABase 'A' = 'T'
 complementDNABase 'C' = 'G'
 complementDNABase 'G' = 'C'
 complementDNABase 'T' = 'A'
-complementDNABase x = x     -- do not change unexpected characters
+complementDNABase  x  =  x  -- do not change unexpected characters
 
 complementDNA :: DNASeq -> DNASeq
 complementDNA s = map complementDNABase s
@@ -97,15 +97,15 @@ complementRNABase 'A' = 'U'
 complementRNABase 'C' = 'G'
 complementRNABase 'G' = 'C'
 complementRNABase 'U' = 'A'
-complementRNABase x = x     -- do not change unexpected characters
+complementRNABase  x  =  x  -- do not change unexpected characters
 
 complementRNA :: RNASeq -> RNASeq
 complementRNA s = map complementRNABase s
 {% endhighlight%}
 
 These examples leverage pattern matching on their input. Note that we also have
-the option of writing it with guards but I don't favor guards for mere pattern
-matching. Regardless, here's `complementDNABase` using guards just to demonstrate:
+the option of writing it with guards, though I don't prefer guard syntax for pattern
+matching. Here's `complementDNABase` using guards just to demonstrate:
 
 {% highlight haskell %}
 complementDNABase :: DNABase -> DNABase
@@ -187,7 +187,7 @@ reverseTranscribe s = map reverseTranscribeBase s
 Transcription and reverse transcription functions should be symmetrical. By
 which I mean to say that if one transcribes a DNA sequence and then reverse
 transcribes the result, it should reproduce the input. The same is true for
-reverse transcription ofan RNA sequence then transcription of the result. We can
+reverse transcription of an RNA sequence then transcription of the result. We can
 make some fun functions to test whether this holds true:
 
 {% highlight haskell %}
@@ -281,12 +281,12 @@ geneticCode "UUA" = 'L'  -- Leucine
 geneticCode "UUC" = 'F'  -- Phenylalanine
 geneticCode "UUG" = 'L'  -- Leucine
 geneticCode "UUU" = 'F'  -- Phenylalanine
-geneticCode   x   = '-'   -- Anything else corresponds to nothing
+geneticCode   x   = '-'  -- Anything else corresponds to nothing
 {% endhighlight %}
 
 When it comes to expressing coding schemes, there's just no way to cut corners
 so that got a little verbose. Writing that sort of code is no fun, but there was
-no way around it[^1](#IUPAC_compression). So now that we've got our genetic code, let's put it
+no way around it[<sup>1</sup>](#IUPAC_compression). So now that we've got our genetic code, let's put it
 to work translating some codons to a protein sequence.
 
 {% highlight haskell %}
@@ -314,12 +314,12 @@ translateDNA = translate . transcribe
 
 Now we can do `translateDNA "GATTACA"` to get `"DY-"`.
 
-For a change of pace, let's do something a bit less frivolous to test our work. We
-look at a [gene I like](http://www.ncbi.nlm.nih.gov/gene/3933) and snag the
-sequence of [an mRNA](http://www.ncbi.nlm.nih.gov/nuccore/NM_001252617.1) and
+For a change of pace, let's do something a bit less frivolous to test our work.
+Let's visit the [NCBI Gene page of a gene I like](http://www.ncbi.nlm.nih.gov/gene/3933)
+and snag the sequences of [an mRNA](http://www.ncbi.nlm.nih.gov/nuccore/NM_001252617.1) and
 [the protein it produces](http://www.ncbi.nlm.nih.gov/protein/NP_001239546.1).
-Here's ![the mRNA sequence file](/assets/lipocalin1_mRNA.fa) and
-![the protein sequence file](/assets/lipocalin1_protein.fa). For simplicity I'll
+Here's [the mRNA sequence file](/assets/lipocalin1_mRNA.fa) and
+[the protein sequence file](/assets/lipocalin1_protein.fa). For simplicity I'll
 put them here:
 
     >gi|357933616|ref|NM_001252617.1| Homo sapiens lipocalin 1 (LCN1), transcript variant 2, mRNA
@@ -357,7 +357,7 @@ simpleSeqGetter fp = do
 
 This is not a proper FASTA parsing job, but it serves for now. I've dropped the
 first line describing the sequence and gotten rid of the newline characters. So
-now I can do the following in `gchi`:
+now I can do the following in `ghci`:
 
 {% highlight haskell %}
 ghci> mrna <- simpleSeqGetter "lipocalin_mRNA.fa"
@@ -370,12 +370,13 @@ False
 
 It's pretty clear that our results don't match. Some readers might have seen
 this coming, because I've not prepared to handle an important detail! If you
-look carefully you'll see that my expected sequence **is** there, but sandwiched
-between some other protein sequence. Without getting into specifics, let's say
-that mRNA sequences contain untranslated regions (UTRs) at both the 5' and 3'
-ends of the sequence. These untranslated regions are a part of the sequence file
-and to figure out what the ribosome would actually produce from this particular
-mRNA we'll need to know how to extract the coding region.
+look carefully you'll see that the expected sequence **is** there, but sandwiched
+between some other protein sequence. Without getting into specifics, mRNA sequences
+contain untranslated regions (UTRs) at both the 5' and 3'
+ends of the sequence. These untranslated regions are a part of the sequence file;
+to figure out what the ribosome would actually produce from this particular
+mRNA we'll need to know how to drop them (UTRs are totally interesting in their
+own right, but that's a story for another time). 
 
 To determine where the translated section begins, we must look for the first (5'
 most) `AUG` codon, this is the start codon and codes for Methionine.
@@ -410,7 +411,8 @@ gloss over transcription and reverse transcription since they directly correlate
 
 ## Translation Party: Reverse Translation
 
-In my previous post, I made something of a big deal about how reverse
+In my [previous post](http://savinaroja.github.io/2015/11/17/a-review-of-the-central-dogma/),
+I made something of a big deal about how reverse
 translation (also sometimes called "back translation")
 has never been observed and we've got pretty good reasons to never
 expect it to occur. But it turns out that there are plenty of times where we
@@ -422,7 +424,7 @@ but not ambiguous. In other words, a given nucleic acid sequence passed through
 the genetic code will only produce one protein sequence, but a given protein
 sequence could be decoded to multiple nucleic acid sequences.
 
-This leads to a **very hard** problem in trying to represent all the possible
+This leads to a *very hard* problem in trying to represent all the possible
 encoding sequences. Only for rather short protein sequences is it computationally
 feasible to consider representing all the combinations in memory or storage, or
 to iteratively consider all of the possibilities.
@@ -499,8 +501,11 @@ ghci> uniqueCodings "ABCDE"
 
 Damn, that's a lot of ways that this short sequence (only 176 amino acids) could be
 represented in DNA. Also interesting is that giving `uniqueCodings` a sequence
-with an invalid amino acid (`'B'`), it correctly reported that this could not be
-coded for by returning `0`.
+with an invalid amino acid such as `'B'` correctly reports that there are `0`
+ways to encode this protein.
+
+Coming up! I think I'll end this post with a short demo of actually producing
+the sequences. Laziness will be our ally.
 
 ### Footnotes
 
