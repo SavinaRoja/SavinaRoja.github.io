@@ -20,14 +20,14 @@ you can load the file via `:l centraldogma.hs` to use the functions defined here
 
 ### Some helpful type synonyms
 
-I'll be working with sequences here using Haskell's native `string` type. Though
+I'll be working with sequences here using Haskell's native `String` type. Though
 DNA, RNA, and protein sequences will all share this same underlying type it will
 be helpful, in terms of documenting the code, to be able to convey whether a
 function is meant to work with a particular kind of sequence or another. To do
 this let's make use of the `type` declaration which creates type synonyms. 
 These should help clarify the code's intent.
 Note that in Haskell a string is a special case of a list, `[]`, one that contains `Char` elements:
-`[Char]`. These will be more informative than just `Char` and `string` later on:
+`[Char]`. These will be more informative than just `Char` and `String` later on:
 
 {% highlight haskell %}
 type Element = Char            -- A unitary object
