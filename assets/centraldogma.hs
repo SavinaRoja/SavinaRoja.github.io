@@ -250,5 +250,6 @@ uniqueCodings s = foldl combine [""] $ reverseTranslate s where
                      combine xs ys = [ x ++ y | x <- xs, y <- ys]
 
 --produce only the possible coding DNA sequences that contain the constraint
-constrainedUniqueEncodings :: ProteinSeq -> [DNASeq]
-constrainedUniqueEncodings s constraint = filter (isInfixOf constraint) $ uniqueEncodings s
+constrainedUniqueCodings :: ProteinSeq -> DNASeq -> [DNASeq]
+constrainedUniqueCodings s constraint = filter (isInfixOf constraint) $ uniqueCodings s
+

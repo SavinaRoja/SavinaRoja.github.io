@@ -605,17 +605,17 @@ You're smart; you decide to let a computer do the investigation.
 
 {% highlight haskell %}
 --produce only the possible coding DNA sequences that contain the constraint
-constrainedUniqueEncodings :: ProteinSeq -> [DNASeq]
-constrainedUniqueEncodings s constraint = filter (isInfixOf constraint) $ uniqueEncodings s
+constrainedUniqueCodings :: ProteinSeq -> DNASeq -> [DNASeq]
+constrainedUniqueCodings s constraint = filter (isInfixOf constraint) $ uniqueCodings s
 {% endhighlight %}
 
 {% highlight haskell%}
 ghci> let ecoRISeq = "GAATTC"
 ghci> let ecoRVSeq = "GATATC"
 ghci> let proteinSegment = "ALGYL"
-ghci> constrainedUniqueEncodings proteinSeqment ecoRISeq
+ghci> constrainedUniqueCodings proteinSeqment ecoRISeq
 []
-ghci> constrainedUniqueEncodings proteinSeqment ecoRVSeq
+ghci> constrainedUniqueCodings proteinSeqment ecoRVSeq
 ["GCACTAGGATATCTA","GCACTAGGATATCTC", ... ,"GCTTTGGGATATCTG","GCTTTGGGATATCTT"]
 {% endhighlight%}
 
