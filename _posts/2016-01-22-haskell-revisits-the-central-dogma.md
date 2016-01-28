@@ -55,7 +55,7 @@ ghci> reverseTranslate mydna  -- The base Chars in DNA can interpreted as valid 
 {% endhighlight %}
 
 Type synonyms are really only there as a reading aid for source code. This
-clarity is very valuable of course, but we can do better. It made sense in the
+clarity is very valuable of course, but we ought to be able to do more. It made sense in the
 very simple context of the previous post, where we represented all sequences
 as strings, that having the type synonyms was an improvement over not having them
 or having to comment every function.
@@ -72,7 +72,7 @@ the complexity down and reduce the amount of code since interconversion is quite
 simple.
 
 {% highlight haskell %}
---DNA and RNA implicitly same, note that Thymine is Uracil in RNA molecule
+--Note that Thymine is Uracil in RNA context
 data Nucleotide = Adenine | Cytosine | Guanosine | Thymine
   deriving (Eq, Show)
 
@@ -100,17 +100,17 @@ data AminoAcid = Alanine
                | Stop
   deriving (Eq, Show)
 
-type DNA = [Nucleotide]  -- Nucleic Acid Sequence
-type Protein = [AminoAcid]  -- Protein Sequence
+type NucleicSeq = [Nucleotide]  -- Nucleic Acid Sequence
+type ProteinSeq = [AminoAcid]   -- Protein Sequence
 {% endhighlight %}
 
 Here I've created two new data types: `Nucleotide`, and `AminoAcid`. These new
-data types consist of unique value constructors and the type synonyms `DNA`,
-`Protein`  declare my intent to work with these sequences as lists of their
+data types consist of unique value constructors and the type synonyms `NucleicSeq`,
+`ProteinSeq` declare my intent to work with these sequences as lists of their
 respective building blocks.
 
 Let's get a quick feel for how we can work with this new system and see how it
-prevents some of the aforementioned weirdness using `ghci`
+prevents some of the aforementioned weirdness:
 
 {% highlight haskell %}
 ghci> let mydna = [Guanosine, Adenine, Thymine, Thymine, Adenine, Cytosine, Adenine]
@@ -120,50 +120,94 @@ ghci> show mydna
 ghci> show mypro
 "[Alanine,Leucine,Glycine,Tyrosine,Leucine,Serine,Tryptophan]"
 ghci> mydna ++ mypro -- Lists are homogenous, we can't mix types in a sequence
+    Couldn't match type ‘AminoAcid’ with ‘Nucleotide’
+    Expected type: [Nucleotide]
+      Actual type: [AminoAcid]
+    In the second argument of ‘(++)’, namely ‘mypro’
+    In the expression: mydna ++ mypro
 ghci> Thymine : mydna -- Prepend Thymine
 [Thymine,Guanosine,Adenine,Thymine,Thymine,Adenine,Cytosine,Adenine]
 {% endhighlight %}
 
-### Replication Aside
+### An aside about replication
 
-Fidelitous (error-free) replication is computationally trivial and we needn't
-overthink it. The function that always gives back the value that it
-was given is known as the [identity function](http://mathworld.wolfram.com/IdentityFunction.html).
-The definition of `replicateBase` was an identity function for `Char`s, but we
-could have used the general identity function from Haskell just as well.
+Fidelitous (error-free) replication is such a trivial problem that we needn't
+overthink it. The function which always gives back the value it was given is
+known as the [identity function](http://mathworld.wolfram.com/IdentityFunction.html).
+The replication of a sequence can then be performed, if there is indeed a need to do
+so, by using the Haskell identity function `id`, which is quite simple:
 
 {% highlight haskell %}
 id :: a -> a
 id x = x
 {% endhighlight %}
 
-In fact `replication` can just be implemented by `id`, which is what we'll do:
+So if we cared to, an alias for `id` could be made like so:
 
 {% highlight haskell %}
 replication = id
-{% endhighliight %}
+{% endhighlight %}
 
-Though generally speaking we may have little need to use `replication`.
+The story of replication probably won't get interesting again until we consider
+infidelity (scandalous!).
 
-### Algebraic Expressions
+### Re-implementation of Complementation... Proclamation
 
-Going to redo some code from before
+This is pretty short and sweet. 
 
 {% highlight haskell %}
---Complementation
 complementNucleotide :: Nucleotide -> Nucleotide
 complementNucleotide Adenine   = Thymine
 complementNucleotide Cytosine  = Guanosine
 complementNucleotide Guanosine = Cytosine
 complementNucleotide Thymine   = Adenine
 
-complement :: DNA -> DNA
+complement :: NucleicSeq -> NucleicSeq
 complement s = map complementNucleotide s
 
-reverseComplementDNA = reverse . complement
+reverseComplement = reverse . complement
+{% endhighlight %}
 
+`complementNucleotide` expresses the `Nucleotide`-wise rules of complementation
+and `complement` maps it over a list to generate the complementary list.
+`reverseComplement` uses function composition to create a function that returns
+the reverse result of the `complement` function (putting it into the standard 5'
+to 3' orientation). Put in practice:
+
+{% highlight haskell %}
+ghci> complement [Thymine, Adenine, Cytosine, Guanosine]
+[Adenine,Thymine,Guanosine,Cytosine]
+ghci> reverseComplement [Thymine, Adenine, Cytosine, Guanosine]
+[Cytosine,Guanosine,Thymine,Adenine]
+ghci> reverseComplement [Glutamate]  -- Disallowed
+    Couldn't match expected type ‘Nucleotide’
+                with actual type ‘AminoAcid’
+    In the expression: Glutamate
+    In the first argument of ‘reverseComplement’, namely ‘[Glutamate]’
+{% endhighlight %}
+
+### Translation
+
+The first thing I'll do as I tackle translation once more is create a new data
+type to represent a codon, `Codon`.
+
+{% highlight haskell %}
 data Codon = Codon Nucleotide Nucleotide Nucleotide
+  deriving (Show)
+{% endhighlight %}
 
+It's important to observe here that a `Codon` type value is constructed using
+the constructor (also called `Codon`) and three `Nucleotide` type values. Using
+this definition enforces the "shape" of a codon, it is a three-membered, ordered
+collection of `Nucleotides`; no exceptions.
+
+The next important job is to redo our `geneticCode` function from earlier to
+work with the new `Codon` type. For the record, there are ways of writing this
+function that require less typing (great for saving time and avoiding typos) but
+are somewhat more arcane (less great for starting out), so I'll wait before
+demonstrating such.
+
+{% highlight haskell %}
 geneticCode :: Codon -> AminoAcid
 geneticCode (Codon Adenine   Adenine   Adenine  ) = Lysine
 geneticCode (Codon Adenine   Adenine   Cytosine ) = Asparagine
@@ -210,7 +254,7 @@ geneticCode (Codon Guanosine Guanosine Cytosine ) = Glycine
 geneticCode (Codon Guanosine Guanosine Guanosine) = Glycine
 geneticCode (Codon Guanosine Guanosine Thymine  ) = Glycine
 geneticCode (Codon Guanosine Thymine   Adenine  ) = Valine
-geneticCode (Codon Guanosine Thymine   Cytosine )  = Valine
+geneticCode (Codon Guanosine Thymine   Cytosine ) = Valine
 geneticCode (Codon Guanosine Thymine   Guanosine) = Valine
 geneticCode (Codon Guanosine Thymine   Thymine  ) = Valine
 geneticCode (Codon Thymine   Adenine   Adenine  ) = Stop -- Ochre
@@ -229,15 +273,61 @@ geneticCode (Codon Thymine   Thymine   Adenine  ) = Leucine
 geneticCode (Codon Thymine   Thymine   Cytosine ) = Phenylalanine
 geneticCode (Codon Thymine   Thymine   Guanosine) = Leucine
 geneticCode (Codon Thymine   Thymine   Thymine  ) = Phenylalanine
---geneticCode x = x
-
-codonify :: DNA -> [Codon]
-codonify s = catMaybes $ map toCodons $ chunksOf 3 s
-
-toCodons :: DNA -> Maybe Codon
-toCodons (f:s:t:[]) = Just (Codon f s t)
-toCodons _ = Nothing
-
-translate :: DNA -> Protein
-translate s = map geneticCode $ codonify s
 {% endhighlight %}
+
+*Don't pity my poor typing fingers, I just copied the old function and worked a
+little vim magic to get this one!* Now I need to find a way to use this function
+so that I can convert a `NucleicSeq` to `ProteinSeq`; since I'm being stricter
+about using codon representation and `NucleicSeq` doesn't directly contain
+`Codon`s, it's slightly more complicated.
+
+Let's start at the top with what our `translate` function should be:
+
+{% highlight haskell %}
+translate :: NucleicSeq -> Protein
+translate s = map geneticCode $ asCodons s
+{% endhighlight %}
+
+`asCodons` is a hypothetical function that takes a `NucleicSeq` and produces
+a list, `[Codon]`, so that we can map `geneticCode` over it to make a
+`ProteinSeq`. Now I'll fill in that hypothetical.
+
+{% highlight haskell %}
+asCodons :: NucleicSeq -> [Codon]
+asCodons s = catMaybes $ map toCodons $ chunksOf 3 s
+
+toCodons :: NucleicSeq -> Maybe Codon
+toCodons (f:s:t:[]) = Just (Codon f s t)  -- Just Codon if list has three elements
+toCodons _ = Nothing  -- Nothing if anything else
+{% endhighlight %}
+
+`asCodons` makes use of `chunksOf 3` to turn its input sequence, `s`, from
+`[Nucleotide]` into `[[Nucleotide]]` where the inner lists have a length of 3.
+The last list may have a length of less than 3 if `s` has a number of elements
+not evenly divisible by 3.
+That caveat presents a problem in that a `Codon` may only be constructed if we
+have the full 3 elements. To work with this problem we make use of `Maybe`, a
+data type frequently used to handle expressions with the possibility of failure.
+
+`toCodons` was written with pattern matching so that if it gets a list with a length
+other than 3, it yields `Nothing` indicating failure. If it succeeds, it
+constructs a `Codon` and returns it "wrapped" in `Just`. When `asCodons` passes
+the result of `map toCodons $ chunksOf 3 s` (which has the type `[Maybe Codon]`)
+to `catMaybes`, it filters out all of the `Nothing`s that might be in the list
+and unwraps the values contained in `Just`s.
+
+Thus our sequence gets neatly interpreted as codons while ignoring possible
+trailing nucleotides before being translated to amino acids. Let's put it to
+some use:
+
+{% highlight haskell %}
+ghci> asCodons [Adenine, Thymine]
+[]
+ghci> asCodons [Adenine, Thymine, Cytosine]
+[Codon Adenine Thymine Cytosine]
+ghci> translate [Cytosine, Adenine, Thymine, Thymine, Guanosine, Guanosine]
+[Histidine,Tryptophan]
+ghci> translate [Cytosine, Adenine, Thymine, Thymine, Guanosine, Guanosine, Adenine]
+[Histidine,Tryptophan]`
+{% endhighlight %}
+

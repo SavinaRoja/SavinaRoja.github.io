@@ -6,6 +6,7 @@ import Data.List
 import Data.List.Split
 import Data.Maybe
 
+--Note that Thymine is Uracil in RNA context
 data Nucleotide = Adenine | Cytosine | Guanosine | Thymine
   deriving (Eq, Show)
 
@@ -33,8 +34,8 @@ data AminoAcid = Alanine
                | Stop
   deriving (Eq, Show)
 
-type DNA = [Nucleotide]
-type Protein = [AminoAcid]
+type NucleicSeq = [Nucleotide]  -- Nucleic Acid Sequence
+type ProteinSeq = [AminoAcid]   -- Protein Sequence
 
 -----------------
 -- Replication --
@@ -52,16 +53,17 @@ complementNucleotide Cytosine  = Guanosine
 complementNucleotide Guanosine = Cytosine
 complementNucleotide Thymine   = Adenine
 
-complement :: DNA -> DNA
+complement :: NucleicSeq -> NucleicSeq
 complement s = map complementNucleotide s
 
-reverseComplementDNA = reverse . complement
+reverseComplement = reverse . complement
 
 -----------------
 -- Translation --
 -----------------
 
 data Codon = Codon Nucleotide Nucleotide Nucleotide
+  deriving (Show)
 
 geneticCode :: Codon -> AminoAcid
 geneticCode (Codon Adenine   Adenine   Adenine  ) = Lysine
@@ -130,20 +132,17 @@ geneticCode (Codon Thymine   Thymine   Guanosine) = Leucine
 geneticCode (Codon Thymine   Thymine   Thymine  ) = Phenylalanine
 --geneticCode x = x
 
-codonify :: DNA -> [Codon]
-codonify s = catMaybes $ map toCodons $ chunksOf 3 s
+asCodons :: NucleicSeq -> [Codon]
+asCodons s = catMaybes $ map toCodons $ chunksOf 3 s
 
-toCodons :: DNA -> Maybe Codon
+toCodons :: NucleicSeq -> Maybe Codon
 toCodons (f:s:t:[]) = Just (Codon f s t)
 toCodons _ = Nothing
 
-translate :: DNA -> Protein
-translate s = map geneticCode $ codonify s
+translate :: NucleicSeq -> ProteinSeq
+translate s = map geneticCode $ asCodons s
 
 {-|
---composing a function to translate DNA by first transcribing it, then translating
-translateDNA :: DNASeq -> ProteinSeq
-translateDNA = translate . transcribe
 
 --A very simple, non-general function to get the sequence
 simpleSeqGetter :: FilePath -> IO Seq
