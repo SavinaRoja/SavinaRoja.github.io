@@ -5,12 +5,12 @@ title: Haskell Revisits the Central Dogma
 
 In this post I'll be going over some of the ideas from the previous,
 [Haskell Meets the Central Dogma](http://savinaroja.github.io/2016/01/11/haskell-meets-the-central-dogma),
-and introduce some additional concepts to refine or improve our approach. If you
+and introduce some additional concepts for refinement. If you
 are new to Haskell, you may want to read that one before this one. This post will
-adopt a more mature approach to our Haskell code, but hopefully the transition
+add some intermediate concepts in Haskell code and hopefully the transition
 will feel suitably gradual for novices.
 
-### Shortcomings of helpful type synonyms
+### Limitations of type synonyms
 
 I previously began by declaring some type synonyms so that in my code
 I could differentiate between functions meant to operate with DNA (`DNASeq`),
@@ -34,10 +34,10 @@ type ProteinSeq = [AminoAcid]  -- Protein variant of Sequence
 
 With these in place I could declare `translate :: RNASeq -> ProteinSeq` in lieu
 of `translate :: String -> String` to indicate that the expected behavior is
-meaningful for `Strings`s in particular contexts, not `String`s in general. Yet
-since the declarations are fundamentally equivalent there is nothing to actually
-prevent one from using any old `String`. Here's some illustration using GHCi of
-the kind of weird behavior that is possible due to this:
+meaningful for particular `Strings` values, not `String` values in general. Yet
+since these type declarations are fundamentally equvialent there is no impediment
+to using just any `String` value: Here's some weird behavior that is possible
+using our type synonym system:
 
 {% highlight haskell %}
 ghci> let mydna = "GATTACA" :: DNASeq
@@ -54,19 +54,16 @@ ghci> reverseTranslate mydna  -- The base Chars in DNA can interpreted as valid 
 [["GGA","GGC","GGG","GGT"],["GCA","GCC","GCG","GCT"],["ACA","ACC","ACG","ACT"],["ACA","ACC","ACG","ACT"],["GCA","GCC","GCG","GCT"],["TGC","TGT"],["GCA","GCC","GCG","GCT"]]
 {% endhighlight %}
 
-Type synonyms are really only there as a reading aid for source code. This
-clarity is very valuable of course, but we ought to be able to do more. It made sense in the
-very simple context of the previous post, where we represented all sequences
-as strings, that having the type synonyms was an improvement over not having them
-or having to comment every function.
-
-This post will explore ways to strengthen the clarity of code and make it more
-rigorous using algebraic and abstract data types in Haskell.
+Type synonyms help with the goal of enhancing code readability, which they do by
+essentially conveniently laying a comment on top of a type. However they are
+clearly limited in that the associations they convey are tenuous. While it
+sufficed for the previous post where I represented all sequences as strings,
+I'll explore how to enhance the clarity and rigor of the code in this post.
 
 ## Using `data`
 
 So let's begin by introducing a new data type system using algebraic data types.
-In a departure from the pedagogical format of the previous work, I'll not be
+In a departure from the format of the previous work, I'll not be
 making a type distinction between RNA and DNA in this post. This is to keep
 the complexity down and reduce the amount of code since interconversion is quite
 simple.
@@ -105,12 +102,12 @@ type ProteinSeq = [AminoAcid]   -- Protein Sequence
 {% endhighlight %}
 
 Here I've created two new data types: `Nucleotide`, and `AminoAcid`. These new
-data types consist of unique value constructors and the type synonyms `NucleicSeq`,
+data types have their own value constructors. The type synonyms `NucleicSeq`,
 `ProteinSeq` declare my intent to work with these sequences as lists of their
 respective building blocks.
 
-Let's get a quick feel for how we can work with this new system and see how it
-prevents some of the aforementioned weirdness:
+Let's get a quick feel for this system and how it prevents some of the weirdness
+from before:
 
 {% highlight haskell %}
 ghci> let mydna = [Guanosine, Adenine, Thymine, Thymine, Adenine, Cytosine, Adenine]
@@ -120,11 +117,11 @@ ghci> show mydna
 ghci> show mypro
 "[Alanine,Leucine,Glycine,Tyrosine,Leucine,Serine,Tryptophan]"
 ghci> mydna ++ mypro -- Lists are homogenous, we can't mix types in a sequence
-    Couldn't match type ‘AminoAcid’ with ‘Nucleotide’
-    Expected type: [Nucleotide]
-      Actual type: [AminoAcid]
-    In the second argument of ‘(++)’, namely ‘mypro’
-    In the expression: mydna ++ mypro
+--    Couldn't match type ‘AminoAcid’ with ‘Nucleotide’
+--    Expected type: [Nucleotide]
+--      Actual type: [AminoAcid]
+--    In the second argument of ‘(++)’, namely ‘mypro’
+--    In the expression: mydna ++ mypro
 ghci> Thymine : mydna -- Prepend Thymine
 [Thymine,Guanosine,Adenine,Thymine,Thymine,Adenine,Cytosine,Adenine]
 {% endhighlight %}
@@ -180,16 +177,16 @@ ghci> complement [Thymine, Adenine, Cytosine, Guanosine]
 ghci> reverseComplement [Thymine, Adenine, Cytosine, Guanosine]
 [Cytosine,Guanosine,Thymine,Adenine]
 ghci> reverseComplement [Glutamate]  -- Disallowed
-    Couldn't match expected type ‘Nucleotide’
-                with actual type ‘AminoAcid’
-    In the expression: Glutamate
-    In the first argument of ‘reverseComplement’, namely ‘[Glutamate]’
+--    Couldn't match expected type ‘Nucleotide’
+--                with actual type ‘AminoAcid’
+--    In the expression: Glutamate
+--    In the first argument of ‘reverseComplement’, namely ‘[Glutamate]’
 {% endhighlight %}
 
 ### Translation
 
 The first thing I'll do as I tackle translation once more is create a new data
-type to represent a codon, `Codon`.
+type to represent a codon.
 
 {% highlight haskell %}
 data Codon = Codon Nucleotide Nucleotide Nucleotide
@@ -197,12 +194,11 @@ data Codon = Codon Nucleotide Nucleotide Nucleotide
 {% endhighlight %}
 
 It's important to observe here that a `Codon` type value is constructed using
-the constructor (also called `Codon`) and three `Nucleotide` type values. Using
-this definition enforces the "shape" of a codon, it is a three-membered, ordered
-collection of `Nucleotides`; no exceptions.
+three `Nucleotide` type values. Using this definition enforces the "shape" of a
+codon as a three-membered, ordered collection of `Nucleotide`s.
 
 The next important job is to redo our `geneticCode` function from earlier to
-work with the new `Codon` type. For the record, there are ways of writing this
+work with the new `Codon` type. There are ways of writing this
 function that require less typing (great for saving time and avoiding typos) but
 are somewhat more arcane (less great for starting out), so I'll wait before
 demonstrating such.
@@ -275,11 +271,11 @@ geneticCode (Codon Thymine   Thymine   Guanosine) = Leucine
 geneticCode (Codon Thymine   Thymine   Thymine  ) = Phenylalanine
 {% endhighlight %}
 
-*Don't pity my poor typing fingers, I just copied the old function and worked a
-little vim magic to get this one!* Now I need to find a way to use this function
-so that I can convert a `NucleicSeq` to `ProteinSeq`; since I'm being stricter
-about using codon representation and `NucleicSeq` doesn't directly contain
-`Codon`s, it's slightly more complicated.
+*Don't pity my poor typing fingers, I just copied the old function and used few
+vim substitutions to make the new one* Now I need to find a way to use this
+function so that I can convert a `NucleicSeq` to `ProteinSeq`; since I'm being
+stricter about using codon representation and `NucleicSeq` doesn't directly
+contain `Codon`s, it's slightly more complicated.
 
 Let's start at the top with what our `translate` function should be:
 
@@ -289,8 +285,8 @@ translate s = map geneticCode $ asCodons s
 {% endhighlight %}
 
 `asCodons` is a hypothetical function that takes a `NucleicSeq` and produces
-a list, `[Codon]`, so that we can map `geneticCode` over it to make a
-`ProteinSeq`. Now I'll fill in that hypothetical.
+a `[Codon]` so that we can map `geneticCode` over it to make a `ProteinSeq`.
+Now to fill in that hypothetical:
 
 {% highlight haskell %}
 asCodons :: NucleicSeq -> [Codon]
@@ -306,8 +302,9 @@ toCodons _ = Nothing  -- Nothing if anything else
 The last list may have a length of less than 3 if `s` has a number of elements
 not evenly divisible by 3.
 That caveat presents a problem in that a `Codon` may only be constructed if we
-have the full 3 elements. To work with this problem we make use of `Maybe`, a
-data type frequently used to handle expressions with the possibility of failure.
+have the full 3 elements. To handle this problem we make use of `Maybe`, a
+data type frequently used to work with the concept of possible failure. A value
+of type `Maybe a` may be either `Nothing` (failure) or `Just a` (success).
 
 `toCodons` was written with pattern matching so that if it gets a list with a length
 other than 3, it yields `Nothing` indicating failure. If it succeeds, it
