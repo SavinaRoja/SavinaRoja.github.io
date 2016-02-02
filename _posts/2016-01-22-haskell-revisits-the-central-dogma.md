@@ -271,7 +271,7 @@ geneticCode (Codon Thymine   Thymine   Guanosine) = Leucine
 geneticCode (Codon Thymine   Thymine   Thymine  ) = Phenylalanine
 {% endhighlight %}
 
-*Don't pity my poor typing fingers, I just copied the old function and used few
+*Don't pity my poor typing fingers, I just copied the old function and used a few
 vim substitutions to make the new one* Now I need to find a way to use this
 function so that I can convert a `NucleicSeq` to `ProteinSeq`; since I'm being
 stricter about using codon representation and `NucleicSeq` doesn't directly
@@ -326,5 +326,6 @@ ghci> translate [Cytosine, Adenine, Thymine, Thymine, Guanosine, Guanosine]
 [Histidine,Tryptophan]
 ghci> translate [Cytosine, Adenine, Thymine, Thymine, Guanosine, Guanosine, Adenine]
 [Histidine,Tryptophan]`
-{% endhighlight %}
+layout{% endhighlight %}
+
 

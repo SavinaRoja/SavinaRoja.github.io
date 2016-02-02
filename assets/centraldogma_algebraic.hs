@@ -54,7 +54,7 @@ complementNucleotide Guanosine = Cytosine
 complementNucleotide Thymine   = Adenine
 
 complement :: NucleicSeq -> NucleicSeq
-complement s = map complementNucleotide s
+complement = map complementNucleotide
 
 reverseComplement = reverse . complement
 
@@ -65,6 +65,25 @@ reverseComplement = reverse . complement
 data Codon = Codon Nucleotide Nucleotide Nucleotide
   deriving (Show)
 
+-- Conveniences --
+--Convert a Char to a Nucleotide
+--This is forgiving, it will not care if U and T are mixed
+--One could easily write unforgiving versions if so inclined
+charToNuc :: Char -> Nucleotide
+charToNuc 'A' = Adenine
+charToNuc 'C' = Cytosine
+charToNuc 'G' = Guanosine
+charToNuc 'T' = Thymine
+charToNuc 'U' = Thymine
+charToNuc  x  = error $ x:" is not a valid nucleotide character" 
+
+--Convert a string of three characters to a codon
+mkCodon :: String -> Codon
+mkCodon [f,s,t] = Codon (charToNuc f) (charToNuc s) (charToNuc t)
+mkCodon _ = error "Incorrect number of characters to make string"
+
+--Could consider using mkCodon in this function as well, though it's just simple
+--enough that I think it's best serving as an example of pattern matching
 geneticCode :: Codon -> AminoAcid
 geneticCode (Codon Adenine   Adenine   Adenine  ) = Lysine
 geneticCode (Codon Adenine   Adenine   Cytosine ) = Asparagine
@@ -111,7 +130,7 @@ geneticCode (Codon Guanosine Guanosine Cytosine ) = Glycine
 geneticCode (Codon Guanosine Guanosine Guanosine) = Glycine
 geneticCode (Codon Guanosine Guanosine Thymine  ) = Glycine
 geneticCode (Codon Guanosine Thymine   Adenine  ) = Valine
-geneticCode (Codon Guanosine Thymine   Cytosine )  = Valine
+geneticCode (Codon Guanosine Thymine   Cytosine ) = Valine
 geneticCode (Codon Guanosine Thymine   Guanosine) = Valine
 geneticCode (Codon Guanosine Thymine   Thymine  ) = Valine
 geneticCode (Codon Thymine   Adenine   Adenine  ) = Stop -- Ochre
@@ -130,75 +149,110 @@ geneticCode (Codon Thymine   Thymine   Adenine  ) = Leucine
 geneticCode (Codon Thymine   Thymine   Cytosine ) = Phenylalanine
 geneticCode (Codon Thymine   Thymine   Guanosine) = Leucine
 geneticCode (Codon Thymine   Thymine   Thymine  ) = Phenylalanine
---geneticCode x = x
 
 asCodons :: NucleicSeq -> [Codon]
-asCodons s = catMaybes $ map toCodons $ chunksOf 3 s
+asCodons s = mapMaybe toCodons (chunksOf 3 s)
 
 toCodons :: NucleicSeq -> Maybe Codon
-toCodons (f:s:t:[]) = Just (Codon f s t)
+toCodons [f,s,t] = Just (Codon f s t)
 toCodons _ = Nothing
 
 translate :: NucleicSeq -> ProteinSeq
 translate s = map geneticCode $ asCodons s
 
-{-|
-
---A very simple, non-general function to get the sequence
-simpleSeqGetter :: FilePath -> IO Seq
-simpleSeqGetter fp = do
-  unmunged <- readFile fp
-  let linedropped = drop 1 $ lines unmunged
-  return $ foldr (++) "" linedropped
-
---Function to drop everything before the first start codon and everything after the first
---stop codon after the start codon
-translateCodingRegion :: RNASeq -> ProteinSeq
-translateCodingRegion s = takeWhile ('*'/=) $ dropWhile ('M'/=) $ translateDNA s
-
 -------------------------
 -- Reverse Translation --
 -------------------------
 
---20 standard amino acids, Stop codons, and catch-all line
-codonsFor :: AminoAcid -> [DNACodon]
-codonsFor 'A' = ["GCA","GCC","GCG","GCT"]              -- Alanine
-codonsFor 'C' = ["TGC","TGT"]                          -- Cysteine
-codonsFor 'D' = ["GAC","GAT"]                          -- Aspartate
-codonsFor 'E' = ["GAA","GAG"]                          -- Glutamate
-codonsFor 'F' = ["TTC","TTT"]                          -- Phenylalanine
-codonsFor 'G' = ["GGA","GGC","GGG","GGT"]              -- Glycine
-codonsFor 'H' = ["CAC","CAT"]                          -- Histidine
-codonsFor 'I' = ["ATA","ATC","ATT"]                    -- Isoleucine
-codonsFor 'K' = ["AAA","AAG"]                          -- Lysine
-codonsFor 'L' = ["CTA","CTC","CTG","CTT","TTA","TTG"]  -- Leucine
-codonsFor 'M' = ["ATG"]                                -- Methionine
-codonsFor 'N' = ["AAC","AAT"]                          -- Asparagine
-codonsFor 'P' = ["CCA","CCC","CCG","CCT"]              -- Proline
-codonsFor 'Q' = ["CAA","CAG"]                          -- Glutamine
-codonsFor 'R' = ["AGA","AGG","CGA","CGC","CGG","CGT"]  -- Arginine
-codonsFor 'S' = ["AGC","AGT","TCA","TCC","TCG","TCT"]  -- Serine
-codonsFor 'T' = ["ACA","ACC","ACG","ACT"]              -- Threonine
-codonsFor 'V' = ["GTA","GTC","GTG","GTT"]              -- Valine
-codonsFor 'W' = ["TGG"]                                -- Tryptophan
-codonsFor 'Y' = ["TAC","TAT"]                          -- Tyrosine
-codonsFor '*' = ["TAA","TAG","TGA"]                    -- Stop
-codonsFor  x  = [] -- If for some reason we get bad input, treat as empty
+codonsFor :: AminoAcid -> [Codon]
+codonsFor Alanine       = [mkCodon "GCA", mkCodon "GCC", mkCodon "GCG", mkCodon "GCT"]
+codonsFor Cysteine      = [mkCodon "TGC", mkCodon "TGT"]
+codonsFor Aspartate     = [mkCodon "GAC", mkCodon "GAT"]
+codonsFor Glutamate     = [mkCodon "GAA", mkCodon "GAG"]
+codonsFor Phenylalanine = [mkCodon "TTC", mkCodon "TTT"]
+codonsFor Glycine       = [mkCodon "GGA", mkCodon "GGC", mkCodon "GGG", mkCodon "GGT"]
+codonsFor Histidine     = [mkCodon "CAC", mkCodon "CAT"]
+codonsFor Isoleucine    = [mkCodon "ATA", mkCodon "ATC", mkCodon "ATT"]
+codonsFor Lysine        = [mkCodon "AAA", mkCodon "AAG"]
+codonsFor Leucine       = [mkCodon "CTA", mkCodon "CTC", mkCodon "CTG", mkCodon "CTT", mkCodon "TTA", mkCodon "TTG"]
+codonsFor Methionine    = [mkCodon "ATG"]
+codonsFor Asparagine    = [mkCodon "AAC", mkCodon "AAT"]
+codonsFor Proline       = [mkCodon "CCA", mkCodon "CCC", mkCodon "CCG", mkCodon "CCT"]
+codonsFor Glutamine     = [mkCodon "CAA", mkCodon "CAG"]
+codonsFor Arginine      = [mkCodon "AGA", mkCodon "AGG", mkCodon "CGA", mkCodon "CGC", mkCodon "CGG" , mkCodon "CGT"]
+codonsFor Serine        = [mkCodon "AGC", mkCodon "AGT", mkCodon "TCA", mkCodon "TCC", mkCodon "TCG" , mkCodon "TCT"]
+codonsFor Threonine     = [mkCodon "ACA", mkCodon "ACC", mkCodon "ACG", mkCodon "ACT"]
+codonsFor Valine        = [mkCodon "GTA", mkCodon "GTC", mkCodon "GTG", mkCodon "GTT"]
+codonsFor Tryptophan    = [mkCodon "TGG"]
+codonsFor Tyrosine      = [mkCodon "TAC", mkCodon "TAT"]
+codonsFor Stop          = [mkCodon "TAA", mkCodon "TAG", mkCodon "TGA"]
 
---mapping codonsFor over a protein sequence
-reverseTranslate :: ProteinSeq -> [[DNACodon]]
-reverseTranslate s  = map codonsFor s
+reverseTranslateToCodons :: ProteinSeq -> [[Codon]]
+reverseTranslateToCodons = map codonsFor
 
---count up all the ways the protein sequence could be coded for in DNA or RNA
+--That was super simple, but it will take a little more work to recapture our
+--previous function: uniqueCodings :: ProteinSeq -> [NucleicSeq]
+--Let's babystep through it
+
+--A deconstructor for Codon
+unCodon :: Codon -> NucleicSeq
+unCodon (Codon f s t) = [f,s,t]
+
+--Apply the deconstructor to a list of Codons
+unCodons :: [Codon] -> [NucleicSeq]
+unCodons = map unCodon
+
+--Compare to reverseTranslateToCodons
+reverseTranslate :: ProteinSeq -> [[NucleicSeq]]
+reverseTranslate = map (unCodons . codonsFor)
+
+--Count up all the ways the protein sequence could be coded for
 uniqueCodingsCount :: ProteinSeq -> Integer
-uniqueCodingsCount s = foldr (\x ->  (*) $ genericLength x) 1 $ reverseTranslate s
+uniqueCodingsCount s = foldr ((*) . genericLength) 1 $ reverseTranslateToCodons s
 
 --produce all the ways the protein sequence could be coded for
-uniqueCodings s = foldl combine [""] $ reverseTranslate s where
-                     combine xs ys = [ x ++ y | x <- xs, y <- ys]
+uniqueCodings :: ProteinSeq -> [NucleicSeq]
+uniqueCodings s = foldl combine ([[]] :: [NucleicSeq]) $ reverseTranslate s where
+                    combine xs ys = [ x ++ y | x <- xs, y <- ys]
 
---produce only the possible coding DNA sequences that contain the constraint
-constrainedUniqueCodings :: ProteinSeq -> DNASeq -> [DNASeq]
+constrainedUniqueCodings :: ProteinSeq -> NucleicSeq -> [NucleicSeq]
 constrainedUniqueCodings s constraint = filter (isInfixOf constraint) $ uniqueCodings s
 
--}
+----------
+-- Misc --
+----------
+
+dnaSymbol :: Nucleotide -> Char
+dnaSymbol Adenine   = 'A'
+dnaSymbol Cytosine  = 'C'
+dnaSymbol Guanosine = 'G'
+dnaSymbol Thymine   = 'T'
+
+rnaSymbol :: Nucleotide -> Char
+rnaSymbol Adenine   = 'A'
+rnaSymbol Cytosine  = 'C'
+rnaSymbol Guanosine = 'G'
+rnaSymbol Thymine   = 'U'
+
+representAsDNA :: NucleicSeq -> String
+representAsDNA = map dnaSymbol
+
+representAsRNA :: NucleicSeq -> String
+representAsRNA = map rnaSymbol
+
+
+stringToNucleicSeq :: String -> NucleicSeq
+stringToNucleicSeq = map charToNuc
+
+--A very simple, non-general function to get the sequence
+simpleSeqGetter :: FilePath -> IO NucleicSeq
+simpleSeqGetter fp = do
+  unmunged <- readFile fp
+  let linedropped = drop 1 $ lines unmunged
+  return $ foldr ((++) . stringToNucleicSeq) ([] :: NucleicSeq) linedropped
+
+--Function to drop everything before the first start codon and everything after the first
+--stop codon after the start codon
+translateCodingRegion :: NucleicSeq -> ProteinSeq
+translateCodingRegion s = takeWhile (Stop /=) $ dropWhile (Methionine/=) $ translate s
+
