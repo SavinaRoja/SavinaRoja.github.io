@@ -6,11 +6,12 @@ import Data.List
 import Data.List.Split
 import Data.Maybe
 
---Note that Thymine is Uracil in RNA context
+--A Nucleotide may be either Adenine, Cytosine, Guanosine, or Thymine/Uracil
+--Thymine is Uracil in RNA
 data Nucleotide = Adenine | Cytosine | Guanosine | Thymine
   deriving (Eq, Show)
 
---The 20 standard amino acids and Stop
+--An AminoAcid may be one of the 20 standard amino acids, or a Stop
 data AminoAcid = Alanine
                | Arginine
                | Asparagine
@@ -49,7 +50,7 @@ replication = id
 
 complementNucleotide :: Nucleotide -> Nucleotide
 complementNucleotide Adenine   = Thymine
-complementNucleotide Cytosine  = Guanosine                                                   
+complementNucleotide Cytosine  = Guanosine                                         
 complementNucleotide Guanosine = Cytosine
 complementNucleotide Thymine   = Adenine
 
@@ -64,18 +65,6 @@ reverseComplement = reverse . complement
 
 data Codon = Codon Nucleotide Nucleotide Nucleotide
   deriving (Show)
-
--- Conveniences --
---Convert a Char to a Nucleotide
---This is forgiving, it will not care if U and T are mixed
---One could easily write unforgiving versions if so inclined
-charToNuc :: Char -> Nucleotide
-charToNuc 'A' = Adenine
-charToNuc 'C' = Cytosine
-charToNuc 'G' = Guanosine
-charToNuc 'T' = Thymine
-charToNuc 'U' = Thymine
-charToNuc  x  = error $ x:" is not a valid nucleotide character" 
 
 --Convert a string of three characters to a codon
 mkCodon :: String -> Codon
@@ -150,15 +139,14 @@ geneticCode (Codon Thymine   Thymine   Cytosine ) = Phenylalanine
 geneticCode (Codon Thymine   Thymine   Guanosine) = Leucine
 geneticCode (Codon Thymine   Thymine   Thymine  ) = Phenylalanine
 
+--Convert a [Nucleotide] to [Codon], trimming possible remainder
 asCodons :: NucleicSeq -> [Codon]
-asCodons s = mapMaybe toCodons (chunksOf 3 s)
-
-toCodons :: NucleicSeq -> Maybe Codon
-toCodons [f,s,t] = Just (Codon f s t)
-toCodons _ = Nothing
+asCodons s = mapMaybe toCodon (chunksOf 3 s) where
+               toCodon [i,j,k] = Just (Codon i j k)
+               toCodon    _    = Nothing
 
 translate :: NucleicSeq -> ProteinSeq
-translate s = map geneticCode $ asCodons s
+translate s = map geneticCode $ asCodons s 
 
 -------------------------
 -- Reverse Translation --
@@ -222,6 +210,17 @@ constrainedUniqueCodings s constraint = filter (isInfixOf constraint) $ uniqueCo
 -- Misc --
 ----------
 
+charToNuc :: Char -> Nucleotide
+charToNuc 'A' = Adenine
+charToNuc 'C' = Cytosine
+charToNuc 'G' = Guanosine
+charToNuc 'T' = Thymine
+charToNuc 'U' = Thymine
+charToNuc  x  = error $ x:" is not a valid nucleotide character"
+
+stringToNucleicSeq :: String -> NucleicSeq
+stringToNucleicSeq = map charToNuc
+
 dnaSymbol :: Nucleotide -> Char
 dnaSymbol Adenine   = 'A'
 dnaSymbol Cytosine  = 'C'
@@ -229,10 +228,8 @@ dnaSymbol Guanosine = 'G'
 dnaSymbol Thymine   = 'T'
 
 rnaSymbol :: Nucleotide -> Char
-rnaSymbol Adenine   = 'A'
-rnaSymbol Cytosine  = 'C'
-rnaSymbol Guanosine = 'G'
 rnaSymbol Thymine   = 'U'
+rnaSymbol x = dnaSymbol x
 
 representAsDNA :: NucleicSeq -> String
 representAsDNA = map dnaSymbol
@@ -240,11 +237,24 @@ representAsDNA = map dnaSymbol
 representAsRNA :: NucleicSeq -> String
 representAsRNA = map rnaSymbol
 
+aaSymbolTable = [(Alanine    , 'A'), (Arginine      , 'R'), (Asparagine , 'N'),
+                 (Aspartate  , 'D'), (Cysteine      , 'C'), (Glutamate  , 'E'),
+                 (Glutamine  , 'Q'), (Glycine       , 'G'), (Histidine  , 'H'),
+                 (Isoleucine , 'I'), (Leucine       , 'L'), (Lysine     , 'K'),
+                 (Methionine , 'M'), (Phenylalanine , 'F'), (Proline    , 'P'),
+                 (Serine     , 'S'), (Threonine     , 'T'), (Tryptophan , 'W'),
+                 (Tyrosine   , 'Y'), (Valine        , 'V'), (Stop       , '*')]
 
-stringToNucleicSeq :: String -> NucleicSeq
-stringToNucleicSeq = map charToNuc
+representProtein :: ProteinSeq -> String
+representProtein = map fetchAA where
+                    fetchAA x = fromJust $ lookup x aaSymbolTable
 
---A very simple, non-general function to get the sequence
+stringToProteinSeq :: String -> ProteinSeq
+stringToProteinSeq = map fetchSymbol where
+                       fetchSymbol x = fromJust $ lookup x $ invert aaSymbolTable
+                       invert = map swap
+                       swap (x, y) = (y, x)
+
 simpleSeqGetter :: FilePath -> IO NucleicSeq
 simpleSeqGetter fp = do
   unmunged <- readFile fp
