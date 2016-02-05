@@ -262,8 +262,8 @@ geneticCode :: NucleicSeq -> AminoAcid
 geneticCode [Adenine, Adenine, Adenine] = Lysine
 {% endhighlight %}
 
-In both of the former, there is no guarantee whether the characters in the input
-are valid, while in the latter we have that assurance. Yet in both functions
+In the former there is no guarantee whether the characters in the input
+are valid while in the latter we have that assurance. Yet in both functions
 there is the possibility for lists of incorrect length; I would like to fix that
 so I will formalize a codon data type and write the function to fit.
 
