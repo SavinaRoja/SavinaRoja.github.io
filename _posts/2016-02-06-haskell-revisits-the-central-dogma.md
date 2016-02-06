@@ -3,20 +3,23 @@ layout: post
 title: Haskell Revisits the Central Dogma
 ---
 
-In this post I'll be going over some of the ideas from the previous,
+This post will recap the previous,
 [Haskell Meets the Central Dogma](http://savinaroja.github.io/2016/01/11/haskell-meets-the-central-dogma),
-and introduce some additional concepts for refinement. If you
-are new to Haskell, you may want to read that one before this one. This post will
-add some intermediate concepts in Haskell code and hopefully the transition
-will feel suitably gradual for novices.
+with the intent to introduce [algebraic data
+types](https://en.wikipedia.org/wiki/Algebraic_data_type).
+Using these will allow
+refinement of the design and gradually present some more features of Haskell.
+The first in this series, [A Review of the Central Dogma](http://savinaroja.github.io/2015/11/17/a-review-of-the-central-dogma/),
+reviews the biological context of the functions presented.
+
+[Here's my code for this post](/assets/centraldogma_algebraic.hs).
 
 ### Limitations of type synonyms
 
-I previously began by declaring some type synonyms so that in my code
-I could differentiate between functions meant to operate with DNA (`DNASeq`),
-RNA (`RNASeq`), or protein (`ProteinSeq`). The type synonyms were all tied to
-Haskell's `String` type (a synonym itself for `[Char]`) so under the hood
-they were of identical type. Here is that code for quick reference:
+I previously began by declaring some type synonyms in my code so that I could
+then differentiate between functions meant to operate with DNA (`DNASeq`),
+RNA (`RNASeq`), or protein (`ProteinSeq`). The type synonyms were all equivalent
+to Haskell's `String` type: `[Char]`. Here is that code for quick reference:
 
 {% highlight haskell %}
 type Element = Char            -- A unitary object
@@ -35,7 +38,7 @@ type ProteinSeq = [AminoAcid]  -- Protein variant of Sequence
 With these in place I could declare `translate :: RNASeq -> ProteinSeq` in lieu
 of `translate :: String -> String` to indicate that the expected behavior is
 meaningful for particular `Strings` values, not `String` values in general. Yet
-since these declarations are fundamentally equivalent, we are still able to do
+since these declarations are fundamentally the same, we are still able to do
 some weird things that it might be best to prevent:
 
 {% highlight haskell %}
@@ -56,14 +59,14 @@ ghci> reverseTranslate mydna  -- The base Chars in DNA can interpreted as valid 
 The takeaway lesson here is that while using `type` to create synonyms can help
 with code readability where you'd like to tersely annotate something with a
 comment (it's like laying a comment on top of your type), they don't
-meaningfully change anything and there might be a better type model for your
-data. In this post I'll explore using some algebraic data types to represent our
+meaningfully change anything below the surface.
+Let's explore using some algebraic data types to represent our
 data which will simultaneously improve the performance, clarity, and rigor of
 the code.
 
-## Using `data`
+## Algebraic types with `data`
 
-So let's begin by intoducing some algebraic data types to represent nucleic acid
+So let's begin by intoducing some custom data types to represent nucleic acid
 sequences and protein sequences. I will not preserve the conceptual distinction
 between DNA and RNA at the type level as I did before; because they are 
 directly correlated (to the extent that we are concerned here), it makes sense
@@ -200,8 +203,7 @@ ghci> pseq
 [Alanine,Valine,Serine,Leucine,Glycine,Leucine]
 {% endhighlight %}
 
-
-### Re-implementation of Complementation... Proclamation
+### Re-implementation of Complementation
 
 With this new data model in place, let's implement the central dogma functions
 agin. Since replication is so trivial (I'll say a little more on this at the
@@ -383,7 +385,7 @@ ghci> translate $ stringToNucleicSeq "GATTACA"
 {% endhighlight %}
 
 To give it a more in depth test application, I'll adjust `simpleSeqGetter` and
-then translate the mRNA from the before.
+`translateCodingRegion` to then translate the mRNA from the before.
 
 {% highlight haskell %}
 simpleSeqGetter :: FilePath -> IO NucleicSeq
@@ -391,24 +393,129 @@ simpleSeqGetter fp = do
   unmunged <- readFile fp
   let linedropped = drop 1 $ lines unmunged
   return $ foldr ((++) . stringToNucleicSeq) ([] :: NucleicSeq) linedropped
-{% endhighlight %}
 
+translateCodingRegion :: NucleicSeq -> ProteinSeq
+translateCodingRegion s = takeWhile (Stop /=) $ dropWhile (Methionine/=) $ translate s
+{% endhighlight %}
 
 {% highlight haskell %}
 ghci> myseq <- simpleSeqGetter "lipocalin1_mRNA.fa"
-ghci> representProtein $ translate myseq
-"TASPSPSKRPVRRPWTQTPEMKPLLLAVSLGLIAALQAHHLLASDEEIQDVSGTWYLKAMTVDREFPEMNLESVTPMTLTTLEGGNLEAKVTMLISGRCQEVKAVLEKTDEPGKYTADGGKHVAYIIRSHVKDHYIFYCEGELHGKPVRGVKLVGRDPKNNLEALEDFEKAAGARGLSTESILIPRQSETCSPGSD*GDTLAPQQPKDGTIQHLRHSQGHGKSSPPLQNAAGCTPSYHPPPSPCPAPPLLVLHKELQQFPV"
+ghci> representProtein $ translateCodingRegion myseq
+"MKPLLLAVSLGLIAALQAHHLLASDEEIQDVSGTWYLKAMTVDREFPEMNLESVTPMTLTTLEGGNLEAKVTMLISGRCQEVKAVLEKTDEPGKYTADGGKHVAYIIRSHVKDHYIFYCEGELHGKPVRGVKLVGRDPKNNLEALEDFEKAAGARGLSTESILIPRQSETCSPGSD"
 {% endhighlight %}
 
 ### Reverse Translation
 
+The first key to the puzzle of computing reverse translation will be a
+function that maps each `AminoAcid` to its corresponding list of coding
+`Codon`s. I'll also define a convenience function `mkCodon` ("make Codon") to
+help keep the lines a little shorter.
+
+{% highlight haskell %}
+mkCodon :: String -> Codon
+mkCodon [f,s,t] = Codon (charToNuc f) (charToNuc s) (charToNuc t)
+mkCodon _ = error "Incorrect number of characters to make Codon"
+
+codonsFor :: AminoAcid -> [Codon]
+codonsFor Alanine       = [mkCodon "GCA", mkCodon "GCC", mkCodon "GCG", mkCodon "GCT"]
+codonsFor Cysteine      = [mkCodon "TGC", mkCodon "TGT"]
+codonsFor Aspartate     = [mkCodon "GAC", mkCodon "GAT"]
+codonsFor Glutamate     = [mkCodon "GAA", mkCodon "GAG"]
+codonsFor Phenylalanine = [mkCodon "TTC", mkCodon "TTT"]
+codonsFor Glycine       = [mkCodon "GGA", mkCodon "GGC", mkCodon "GGG", mkCodon "GGT"]
+codonsFor Histidine     = [mkCodon "CAC", mkCodon "CAT"]
+codonsFor Isoleucine    = [mkCodon "ATA", mkCodon "ATC", mkCodon "ATT"]
+codonsFor Lysine        = [mkCodon "AAA", mkCodon "AAG"]
+codonsFor Leucine       = [mkCodon "CTA", mkCodon "CTC", mkCodon "CTG", mkCodon "CTT", mkCodon "TTA", mkCodon "TTG"]
+codonsFor Methionine    = [mkCodon "ATG"]
+codonsFor Asparagine    = [mkCodon "AAC", mkCodon "AAT"]
+codonsFor Proline       = [mkCodon "CCA", mkCodon "CCC", mkCodon "CCG", mkCodon "CCT"]
+codonsFor Glutamine     = [mkCodon "CAA", mkCodon "CAG"]
+codonsFor Arginine      = [mkCodon "AGA", mkCodon "AGG", mkCodon "CGA", mkCodon "CGC", mkCodon "CGG" , mkCodon "CGT"]
+codonsFor Serine        = [mkCodon "AGC", mkCodon "AGT", mkCodon "TCA", mkCodon "TCC", mkCodon "TCG" , mkCodon "TCT"]
+codonsFor Threonine     = [mkCodon "ACA", mkCodon "ACC", mkCodon "ACG", mkCodon "ACT"]
+codonsFor Valine        = [mkCodon "GTA", mkCodon "GTC", mkCodon "GTG", mkCodon "GTT"]
+codonsFor Tryptophan    = [mkCodon "TGG"]
+codonsFor Tyrosine      = [mkCodon "TAC", mkCodon "TAT"]
+codonsFor Stop          = [mkCodon "TAA", mkCodon "TAG", mkCodon "TGA"]
+{% endhighlight %}
+
+The reverse translation operation can just be the application of `codonsFor` to
+each `AminoAcid` in a `ProteinSeq`:
+
+{% highlight haskell %}
+reverseTranslate :: ProteinSeq -> [[Codon]]
+reverseTranslate = map codonsFor
+{% endhighlight %}
+
+{% highlight haskell %}
+ghci> reverseTranslate [Phenylalanine, Isoleucine, Glutamine, Glutamine]
+[[Codon Thymine Thymine Cytosine,Codon Thymine Thymine Thymine],[Codon Adenine Thymine Adenine,Codon Adenine Thymine Cytosine,Codon Adenine Thymine Thymine],[Codon Cytosine Adenine Adenine,Codon Cytosine Adenine Guanosine],[Codon Cytosine Adenine Adenine,Codon Cytosine Adenine Guanosine]]
+{% endhighlight %}
+
+Now let's create `uniqueCodings :: ProteinSeq -> [NucleicSeq]` which will
+produce all of the possible nucleic acid sequences which could code for the
+protein. I'll have to add an intermediate step to unpack the `Nucleotide`
+components from a `Codon`.
+Beware: the size of the output increases exponentially with the
+size of the input (unless you only have `Methionine` or `Tryptophan` in the
+sequence).
+
+{% highlight haskell %}
+-- Unpack the Codons in [Codon] to get [NucleicSeq]
+unCodons :: [Codon] -> [NucleicSeq]
+unCodons = map unCodon where
+             unCodon (Codon f s t) = [f,s,t]
+
+--produce all the ways the protein sequence could be encoded
+uniqueCodings :: ProteinSeq -> [NucleicSeq]
+uniqueCodings s = foldr (combine . unCodons) ([[]] :: [NucleicSeq]) $ reverseTranslate s where
+                    combine xs ys = [ x ++ y | x <- xs, y <- ys]
+
+--Count up all the ways the protein sequence could be encoded
+uniqueCodingsCount :: ProteinSeq -> Integer
+uniqueCodingsCount s = foldr ((*) . genericLength) 1 $ reverseTranslate s
+{% endhighlight %}
+
+Let's do a few tests:
+
+{% highlight haskell %}
+ghci> uniqueCodingsCount ([] :: ProteinSeq)
+1
+ghci> uniqueCodingsCount [Alanine]
+4
+ghci> uniqueCodingscount [Alanine, Aspartate]
+8
+ghci> map representAsDNA $ uniqueCodings [Alanine, Aspartate]
+["GCAGAC","GCAGAT","GCCGAC","GCCGAT","GCGGAC","GCGGAT","GCTGAC","GCTGAT"]
+{% endhighlight%}
+
+With the appropriate adjustment to `constrainedUniqueCodings` I can repeat my
+previous work on finding out whether a certain `NucleicSeq` can be found among
+the reverse translated `NucleicSeq`s from a given `ProteinSeq`.
+
+{% highlight haskell %}
+constrainedUniqueCodings :: ProteinSeq -> NucleicSeq -> [NucleicSeq]
+constrainedUniqueCodings s constraint = filter (isInfixOf constraint) $ uniqueCodings s
+{% endhighlight %}
+
+{% highlight haskell %}
+ghci> let ecoRISeq = stringToNucleicSeq "GAATTC"
+ghci> let ecoRVSeq = stringToNucleicSeq "GATATC"
+ghci> let proteinSegment = stringToProteinSeq "ALGYLSW"
+ghci> map representAsDNA$ constrainedUniqueCodings proteinSegment ecoRISeq
+[]
+ghci> map representAsDNA $ constrainedUniqueCodings proteinSegment ecoRISeq
+["GCACTAGGATATCTA","GCACTAGGATATCTC", ... ,"GCTTTGGGATATCTG","GCTTTGGGATATCTT"]
+{% endhighlight %}
+
 ### What about replication?
 
 Fidelitous (error-free) replication is such a trivial problem that we needn't
-overthink it. The function which always gives back the value it was given is
-known as the [identity function](http://mathworld.wolfram.com/IdentityFunction.html).
-The replication of a sequence can then be performed, if there is indeed a need to do
-so, by using the Haskell identity function `id`, which is quite simple:
+hardly think about it. The function which always gives back the value it was
+given is known as the [identity function](http://mathworld.wolfram.com/IdentityFunction.html).
+The replication of a sequence can then be expressed by using the Haskell
+identity function `id`, which is:
 
 {% highlight haskell %}
 id :: a -> a

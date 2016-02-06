@@ -148,11 +148,6 @@ asCodons s = mapMaybe toCodon (chunksOf 3 s) where
 translate :: NucleicSeq -> ProteinSeq
 translate s = map geneticCode $ asCodons s 
 
---Function to drop everything before the first start codon and everything after the first
---stop codon after the start codon
-translateCodingRegion :: NucleicSeq -> ProteinSeq
-translateCodingRegion s = takeWhile (Stop /=) $ dropWhile (Methionine/=) $ translate s
-
 -------------------------
 -- Reverse Translation --
 -------------------------
@@ -183,10 +178,13 @@ codonsFor Stop          = [mkCodon "TAA", mkCodon "TAG", mkCodon "TGA"]
 reverseTranslate :: ProteinSeq -> [[Codon]]
 reverseTranslate = map codonsFor
 
--- Unpack the Codons in [Codon] to get [NucleicSeq]
+--A deconstructor for Codon
+unCodon :: Codon -> NucleicSeq
+unCodon (Codon f s t) = [f,s,t]
+
+--Apply the deconstructor to a list of Codons
 unCodons :: [Codon] -> [NucleicSeq]
-unCodons = map unCodon where
-             unCodon (Codon f s t) = [f,s,t]
+unCodons = map unCodon
 
 --Count up all the ways the protein sequence could be coded for
 uniqueCodingsCount :: ProteinSeq -> Integer
@@ -194,7 +192,7 @@ uniqueCodingsCount s = foldr ((*) . genericLength) 1 $ reverseTranslate s
 
 --produce all the ways the protein sequence could be coded for
 uniqueCodings :: ProteinSeq -> [NucleicSeq]
-uniqueCodings s = foldr (combine . unCodons) ([[]] :: [NucleicSeq]) $ reverseTranslate s where
+uniqueCodings s = foldr combine ([[]] :: [NucleicSeq]) $ reverseTranslate s where
                     combine xs ys = [ x ++ y | x <- xs, y <- ys]
 
 constrainedUniqueCodings :: ProteinSeq -> NucleicSeq -> [NucleicSeq]
@@ -254,4 +252,9 @@ simpleSeqGetter fp = do
   unmunged <- readFile fp
   let linedropped = drop 1 $ lines unmunged
   return $ foldr ((++) . stringToNucleicSeq) ([] :: NucleicSeq) linedropped
+
+--Function to drop everything before the first start codon and everything after the first
+--stop codon after the start codon
+translateCodingRegion :: NucleicSeq -> ProteinSeq
+translateCodingRegion s = takeWhile (Stop /=) $ dropWhile (Methionine/=) $ translate s
 
