@@ -7,12 +7,14 @@ This post will recap the previous,
 [Haskell Meets the Central Dogma](http://savinaroja.github.io/2016/01/11/haskell-meets-the-central-dogma),
 with the intent to introduce [algebraic data
 types](https://en.wikipedia.org/wiki/Algebraic_data_type).
-Using these will allow
-refinement of the design and gradually present some more features of Haskell.
+Using these will allow refinement of the design and gradually present some more
+features of Haskell and continue a gradual exposition.
 The first in this series, [A Review of the Central Dogma](http://savinaroja.github.io/2015/11/17/a-review-of-the-central-dogma/),
 reviews the biological context of the functions presented.
 
-[Here's my code for this post](/assets/centraldogma_algebraic.hs).
+[Here's the code for this post](/assets/centraldogma_algebraic.hs). I would like
+to thank [Roman Cheplyaka](https://ro-che.info/) for helpful discussion and code
+review.
 
 ### Limitations of type synonyms
 
