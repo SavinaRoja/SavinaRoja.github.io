@@ -7,8 +7,8 @@ This post will recap the previous,
 [Haskell Meets the Central Dogma](http://savinaroja.github.io/2016/01/11/haskell-meets-the-central-dogma),
 with the intent to introduce [algebraic data
 types](https://en.wikipedia.org/wiki/Algebraic_data_type).
-Using these will allow refinement of the design and gradually present some more
-features of Haskell and continue a gradual exposition.
+Using these will allow refinement of the design, present some more
+features of Haskell, and continue a gradual exposition.
 The first in this series, [A Review of the Central Dogma](http://savinaroja.github.io/2015/11/17/a-review-of-the-central-dogma/),
 reviews the biological context of the functions presented.
 
