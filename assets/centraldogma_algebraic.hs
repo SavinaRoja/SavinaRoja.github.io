@@ -5,6 +5,7 @@
 import Data.List
 import Data.List.Split
 import Data.Maybe
+import Control.Applicative
 
 --A Nucleotide may be either Adenine, Cytosine, Guanosine, or Thymine/Uracil
 --Thymine is Uracil in RNA
@@ -50,7 +51,7 @@ replication = id
 
 complementNucleotide :: Nucleotide -> Nucleotide
 complementNucleotide Adenine   = Thymine
-complementNucleotide Cytosine  = Guanosine                                         
+complementNucleotide Cytosine  = Guanosine
 complementNucleotide Guanosine = Cytosine
 complementNucleotide Thymine   = Adenine
 
@@ -63,15 +64,16 @@ reverseComplement = reverse . complement
 -- Translation --
 -----------------
 
-data Codon = Codon Nucleotide Nucleotide Nucleotide
-  deriving (Show)
+--The ! makes the fields strict, laziness could result in unnecessary overhead
+data Codon = Codon !Nucleotide !Nucleotide !Nucleotide
+  deriving (Eq, Ord, Show)
 
 --Convert a string of three characters to a codon
 mkCodon :: String -> Codon
 mkCodon [f,s,t] = Codon (charToNuc f) (charToNuc s) (charToNuc t)
 mkCodon _ = error "Incorrect number of characters to make Codon"
 
---Could consider using mkCodon in this function as well, though it's just simple
+--Could consider using mkCodon in this function as well, though it's simple
 --enough that I think it's best serving as an example of pattern matching
 geneticCode :: Codon -> AminoAcid
 geneticCode (Codon Adenine   Adenine   Adenine  ) = Lysine
@@ -190,12 +192,11 @@ unCodons = map unCodon where
 
 --Count up all the ways the protein sequence could be coded for
 uniqueCodingsCount :: ProteinSeq -> Integer
-uniqueCodingsCount s = foldr ((*) . genericLength) 1 $ reverseTranslate s
+uniqueCodingsCount s = foldl' (\x y -> x * genericLength y) 1 $ reverseTranslate s
 
 --produce all the ways the protein sequence could be coded for
 uniqueCodings :: ProteinSeq -> [NucleicSeq]
-uniqueCodings s = foldr (combine . unCodons) ([[]] :: [NucleicSeq]) $ reverseTranslate s where
-                    combine xs ys = [ x ++ y | x <- xs, y <- ys]
+uniqueCodings s = foldr (liftA2 (++) . unCodons) ([[]] :: [NucleicSeq]) $ reverseTranslate s 
 
 constrainedUniqueCodings :: ProteinSeq -> NucleicSeq -> [NucleicSeq]
 constrainedUniqueCodings s constraint = filter (isInfixOf constraint) $ uniqueCodings s
@@ -245,7 +246,7 @@ representProtein = map fetchAA where
 
 stringToProteinSeq :: String -> ProteinSeq
 stringToProteinSeq = map fetchSymbol where
-                       fetchSymbol x = fromJust $ lookup x $ invert aaSymbolTable
+                       fetchSymbol x = fromMaybe (error ("Bad amino acid: " ++ show x)) $ lookup x $ invert aaSymbolTable
                        invert = map swap
                        swap (x, y) = (y, x)
 

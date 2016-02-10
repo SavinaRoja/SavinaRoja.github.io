@@ -186,7 +186,7 @@ representProtein = map fetchAA where
 
 stringToProteinSeq :: String -> ProteinSeq
 stringToProteinSeq = map fetchSymbol where
-                       fetchSymbol x = fromJust $ lookup x $ invert aaSymbolTable
+                       fetchSymbol x = fromMaybe (error ("Invalid amino acid: " ++ show x)) $ lookup x $ invert aaSymbolTable
                        invert = map swap
                        swap (x, y) = (y, x)
 {% endhighlight%}
@@ -202,6 +202,10 @@ ghci> let pseq = stringToProteinSeq "AVSLGL"
 ghci> pseq
 [Alanine,Valine,Serine,Leucine,Glycine,Leucine]
 {% endhighlight %}
+
+I should note that performing lookups on lists like I have done here is not the
+most efficient method. Data structures such as `Map` or `HashMap` will
+have better lookup performance.
 
 ### Re-implementation of Complementation
 
@@ -270,14 +274,16 @@ there is the possibility for lists of incorrect length; I would like to fix that
 so I will formalize a codon data type and write the function to fit.
 
 {% highlight haskell %}
-data Codon = Codon Nucleotide Nucleotide Nucleotide
+data Codon = Codon !Nucleotide !Nucleotide !Nucleotide
   deriving (Show)
 {% endhighlight %}
 
 Now I have a new data type called `Codon` whose values can be created using the
 type constructor `Codon` (same name in this case, but it's good to remember the
 distinction between types and their constructors) which takes three and only
-three `Nucleotide` values and holds them as an ordered triplet.
+three `Nucleotide` values and holds them as an ordered triplet. I have prepended
+each field with `!` to make them strict, essentially establishing a policy that
+a `Codon` cannot be partially defined.
 
 This provides the basis of the new definition of `geneticCode`:
 
@@ -469,13 +475,17 @@ unCodons = map unCodon where
 
 --produce all the ways the protein sequence could be encoded
 uniqueCodings :: ProteinSeq -> [NucleicSeq]
-uniqueCodings s = foldr (combine . unCodons) ([[]] :: [NucleicSeq]) $ reverseTranslate s where
-                    combine xs ys = [ x ++ y | x <- xs, y <- ys]
+uniqueCodings s = foldr (liftA2 (++) . unCodons) ([[]] :: [NucleicSeq]) $ reverseTranslate s 
 
 --Count up all the ways the protein sequence could be encoded
 uniqueCodingsCount :: ProteinSeq -> Integer
-uniqueCodingsCount s = foldr ((*) . genericLength) 1 $ reverseTranslate s
+uniqueCodingsCount s = fold ((*) . genericLength) 1 $ reverseTranslate s
 {% endhighlight %}
+
+Note that I have modified `uniqueCodings` to make use of the lists as
+applicative functors. `liftA2` is from `Control.Applicative`. You may want to
+start reading [here](http://learnyouahaskell.com/functors-applicative-functors-and-monoids#applicative-functors)
+if applicative functors are new to you.
 
 Let's do a few tests:
 
