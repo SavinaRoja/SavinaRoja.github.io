@@ -10,7 +10,7 @@ import Control.Applicative
 --A Nucleotide may be either Adenine, Cytosine, Guanosine, or Thymine/Uracil
 --Thymine is Uracil in RNA
 data Nucleotide = Adenine | Cytosine | Guanosine | Thymine
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 --An AminoAcid may be one of the 20 standard amino acids, or a Stop
 data AminoAcid = Alanine
@@ -34,7 +34,7 @@ data AminoAcid = Alanine
                | Tyrosine
                | Valine
                | Stop
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 type NucleicSeq = [Nucleotide]  -- Nucleic Acid Sequence
 type ProteinSeq = [AminoAcid]   -- Protein Sequence

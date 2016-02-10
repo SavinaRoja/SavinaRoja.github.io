@@ -81,7 +81,7 @@ code. I will not cover ambiguous nucleotide or amino acids here.
 --A Nucleotide may be either Adenine, Cytosine, Guanosine, or Thymine/Uracil
 --Thymine is Uracil in RNA
 data Nucleotide = Adenine | Cytosine | Guanosine | Thymine
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 --An AminoAcid may be one of the 20 standard amino acids, or a Stop
 data AminoAcid = Alanine
@@ -277,7 +277,7 @@ so I will formalize a codon data type and write the function to fit.
 
 {% highlight haskell %}
 data Codon = Codon !Nucleotide !Nucleotide !Nucleotide
-  deriving (Show)
+  deriving (Eq, Ord, Show)
 {% endhighlight %}
 
 Now I have a new data type called `Codon` whose values can be created using the
