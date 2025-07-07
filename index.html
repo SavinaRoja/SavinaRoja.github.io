@@ -1,0 +1,139 @@
+<!doctype html>
+<html dir="ltr" lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Testing OpenStreetMaps and Leaflet</title>
+    <style>
+html, body, main, #map {
+  height: 100%;
+  width: 100vw;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  </head>
+  <body>
+    <main>
+      <div id="map"></div>
+    </main>
+    <script>
+      var data = getData();
+      var waterSitesLayerGroup = L.layerGroup();
+      var foodSitesLayerGroup = L.layerGroup();
+      var airConditioningSitesLayerGroup = L.layerGroup();
+
+      for (let item of data.water) {
+        waterSitesLayerGroup.addLayer(
+            L.marker([item.latitude, item.longitude])
+            .bindPopup(item.name)
+            .bindTooltip(item.tooltip)
+        );
+      }
+      for (let item of data.food) {
+        foodSitesLayerGroup.addLayer(
+            L.marker([item.latitude, item.longitude])
+            .bindPopup(item.name)
+            .bindTooltip(item.tooltip)
+        );
+      }
+      for (let item of data.airConditioning) {
+        airConditioningSitesLayerGroup.addLayer(
+            L.marker([item.latitude, item.longitude])
+            .bindPopup(item.name)
+            .bindTooltip(item.tooltip)
+        );
+      }
+
+      var osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 21,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      });
+
+      var map = L.map('map', {
+        'center': [35.990482, -78.89937],
+        'zoom': 13,
+        'layers': [osm, waterSitesLayerGroup],
+        'inertia': true
+      });
+
+      var baseMaps = {
+        'OpenStreetMap': osm,
+      };
+
+      var overlayMaps = {
+        'Water': waterSitesLayerGroup,
+        'Food': foodSitesLayerGroup,
+        'Air Conditioning': airConditioningSitesLayerGroup
+      };
+
+      var layerControl = L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+      // https://bookdown.org/sammigachuhi/book-leaflet-1/layer-groups-and-controls.html
+      // TODO: 
+      //  - legend?
+      //  - scale bar?
+      //  - how to change colors for each layer group 
+      //  - translations (probably not trivial, but not too hard?)
+
+      confirmToLocate();
+
+      function confirmToLocate() {
+        if (confirm('Would you like to center on your current location?')) {
+          map.locate({setView: true, maxZoom: 13});
+        }
+      }
+
+      // Add the layers to the map here, to enable them all on startup.
+      foodSitesLayerGroup.addTo(map);
+      airConditioningSitesLayerGroup.addTo(map);
+
+
+      function getData() {
+        return {
+            'food': [
+                {
+                    'name': 'Omie\'s Coffee Shop and Roastery',
+                    'latitude': 36.01997224541495,
+                    'longitude': -78.88985079658626,
+                    'tooltip': 'Free food for all.<br><em>Please exercise due caution regarding food spoilage.</em>'
+                },
+                {
+                    'name': 'St. Joseph\'s Episcopal Church',
+                    'latitude': 36.0066957834078,
+                    'longitude': -78.92129602668827,
+                    'tooltip': 'Free food for all.<br><em>Please exercise due caution regarding food spoilage.</em>'
+                }
+            ],
+            'water': [
+                {
+                    'name': 'Omie\'s Coffee Shop and Roastery',
+                    'latitude': 36.01997224541495,
+                    'longitude': -78.88985079658626,
+                    'tooltip': 'The refrigerator outside is often stocked with water bottles, and ice packs in the freezer.'
+                },
+                {
+                    'name': 'St. Joseph\'s Episcopal Church',
+                    'latitude': 36.0066957834078,
+                    'longitude': -78.92129602668827,
+                    'tooltip': 'The refrigerator outside is often stocked with water bottles, and ice packs in the freezer.'
+                }
+            ],
+            'airConditioning': [
+                {
+                    'name': 'Heat Wave Shelter',
+                    'latitude': 36.01397224541495,
+                    'longitude': -78.88385079658626,
+                    'tooltip': '<em>Heat Wave Shelter</em><br>Public access air conditioning, capacity 400.'
+                }
+            ]
+        }
+      }
+    </script>
+  </body>
+</html>
